@@ -26,8 +26,14 @@ module "vpc" {
   nat_gateway_count         = local.nat_gateway_count
   enable_vpc_flow_logs      = local.enable_vpc_flow_logs
   
+  # This will be updated after security_group is created
+  vpc_endpoints_security_group_id = module.security_group.vpc_endpoints_security_group_id
+  
   # Tags
   tags = local.common_tags
+
+  # Ensure security_group is created first
+  depends_on = [module.security_group]
 }
 
 # ========================================
