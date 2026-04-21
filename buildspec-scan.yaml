@@ -1,0 +1,67 @@
+version: 0.2
+
+# ========================================
+# CodeBuild Buildspec - Security Scan (Trivy)
+# ========================================
+# このファイルは Trivy を使用してコンテナイメージをスキャンします
+
+phases:
+  pre_build:
+    commands:
+      - echo "=========================================="
+      - echo "Phase: Pre-Build - Trivy Installation"
+      - echo "=========================================="
+      - echo "Installing Trivy on $(date)"
+      - apt-get update -y
+      - apt-get install -y wget apt-transport-https gnupg lsb-release
+      - wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
+      - echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | tee -a /etc/apt/sources.list.d/trivy.list
+      - apt-get update -y
+      - apt-get install -y trivy
+      - echo "Trivy installed successfully"
+      - trivy --version
+
+  build:
+    commands:
+      - echo "=========================================="
+      - echo "Phase: Build - Security Scan with Trivy"
+      - echo "=========================================="
+      - echo "Scanning Docker image for vulnerabilities on $(date)"
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - echo "Scanning image: $REPOSITORY_URI:$IMAGE_TAG"
+      - trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output scan-results.json $REPOSITORY_URI:$IMAGE_TAG
+      - trivy image --severity HIGH,CRITICAL --exit-code 0 $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Running severity check..."
+      - |
+        CRITICAL_COUNT=$(trivy image --severity CRITICAL --format json $REPOSITORY_URI:$IMAGE_TAG | jq '[.Results[]? | select(.Vulnerabilities != null) | .Vulnerabilities[] | select(.Severity == "CRITICAL")] | length')
+        echo "Critical vulnerabilities found: $CRITICAL_COUNT"
+        if [ "$CRITICAL_COUNT" -gt 0 ]; then
+          echo "CRITICAL vulnerabilities detected! Build failing."
+          exit 1
+        fi
+      - |
+        HIGH_COUNT=$(trivy image --severity HIGH --format json $REPOSITORY_URI:$IMAGE_TAG | jq '[.Results[]? | select(.Vulnerabilities != null) | .Vulnerabilities[] | select(.Severity == "HIGH")] | length')
+        echo "High vulnerabilities found: $HIGH_COUNT"
+
+  post_build:
+    commands:
+      - echo "=========================================="
+      - echo "Phase: Post-Build - Scan Complete"
+      - echo "=========================================="
+      - echo "Scan completed successfully on $(date)"
+      - ls -la scan-results.json
+
+artifacts:
+  files:
+    - scan-results.json
+  name: ScanArtifact
+
+# ========================================
+# Environment Variables (from CodeBuild Project)
+# ========================================
+# 環境変数はコードビルドプロジェクトで定義される
+# - AWS_DEFAULT_REGION: ap-northeast-1
+# - AWS_ACCOUNT_ID: 123456789012
+# - IMAGE_REPO_NAME: ecs-sample

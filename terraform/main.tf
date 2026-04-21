@@ -233,3 +233,49 @@ module "monitoring" {
   depends_on = [module.ecs, module.rds, module.alb]
 }
 
+# ========================================
+# Phase 12: CI/CD Pipeline Configuration
+# ========================================
+module "cicd" {
+  source = "./modules/cicd"
+
+  project_name             = var.project_name
+  environment              = var.environment
+  aws_region               = var.aws_region
+
+  # GitHub Configuration
+  github_owner             = "hogecode"
+  github_repo              = "ecs-sample"
+  github_token             = var.github_token
+  github_branch_develop    = "develop"
+  github_branch_main       = "main"
+
+  # ECR Configuration
+  ecr_repository_name      = var.ecr_nextjs_repository_name
+
+  # ECS Configuration
+  ecs_cluster_name         = module.ecs.cluster_name
+  ecs_service_name         = module.ecs.service_name
+  ecs_task_definition_family = "ecs-sample"
+
+  # ALB Configuration
+  alb_target_group_arn     = module.alb.target_group_arn
+
+  # Artifact Storage
+  artifact_bucket_name     = module.storage.artifact_bucket_name
+  kms_key_id              = module.storage.artifact_bucket_kms_key_id
+
+  # CodeBuild Configuration
+  codebuild_environment_compute_type = var.environment == "prod" ? "BUILD_GENERAL1_LARGE" : "BUILD_GENERAL1_MEDIUM"
+  codebuild_environment_image        = "aws/codebuild/standard:5.0"
+  codebuild_privileged_mode          = true
+
+  # CodeDeploy Configuration
+  enable_manual_approval   = var.environment == "prod" ? true : false
+
+  # Tags
+  common_tags              = local.common_tags
+
+  depends_on = [module.ecs, module.alb, module.storage]
+}
+

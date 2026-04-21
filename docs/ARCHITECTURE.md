@@ -337,6 +337,47 @@ Outbound:
 - IAM、RDS、ECS API 呼び出しの監査
 - 本番環境で有効推奨（S3 に 90日保存後 Glacier へ移行）
 
+### 9. CI/CD パイプライン
+
+**GitHub Integration**
+- リポジトリ: `hogecode/ecs-sample`
+- ブランチ戦略: GitFlow (main, develop, feature/*)
+- トリガー: GitHub OAuth によるプッシュ検出
+
+**CodeBuild Projects**
+- `ecs-sample-{env}-build`: Docker イメージビルド + ECR プッシュ
+  - buildspec.yaml 使用
+  - Compute Type: 本番=Large, ステージング=Medium
+  - キャッシング: Docker レイヤーキャッシュ有効
+  
+- `ecs-sample-{env}-scan`: Trivy セキュリティスキャン
+  - buildspec-scan.yaml 使用
+  - CRITICAL 脆弱性で自動失敗
+  - 脆弱性ポリシー: CRITICAL/HIGH は対応必須
+
+**CodeDeploy Configuration**
+- ECS Fargate Blue/Green デプロイメント
+- ステージング: AllAtOnce（全タスク同時更新）
+- 本番: Canary（10%→5分待機→90%）
+- 自動ロールバック: 有効（失敗時）
+
+**CodePipeline Stages**
+1. Source (GitHub) - develop/main ブランチ
+2. Build (CodeBuild) - Docker イメージ作成
+3. Scan (CodeBuild) - 脆弱性チェック
+4. Approval (Manual) - 本番環境のみ
+5. Deploy (CodeDeploy) - ECS にデプロイ
+
+**IAM Roles**
+- CodeBuild Role: ECR, S3, CloudWatch Logs 権限
+- CodePipeline Role: CodeBuild, CodeDeploy, S3, ECS 権限
+- CodeDeploy Role: ECS 更新権限
+
+**Artifact Storage**
+- S3 Bucket: `artifact-bucket-{env}`
+- KMS 暗号化: 有効
+- 保持期間: 30日
+
 ## トラフィックフロー
 
 ### リクエストフロー（インバウンド）
