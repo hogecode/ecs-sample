@@ -261,6 +261,24 @@ variable "rds_password" {
   sensitive   = true
 }
 
+variable "rds_parameter_group_family" {
+  description = "DB parameter group family (e.g., mysql8.0, postgres14)"
+  type        = string
+  default     = "mysql8.0"
+}
+
+variable "rds_parameters" {
+  description = "Map of DB parameter group parameters"
+  type        = map(string)
+  default     = {}
+}
+
+variable "enable_enhanced_monitoring" {
+  description = "Enable RDS Enhanced Monitoring"
+  type        = bool
+  default     = true
+}
+
 
 # ========================================
 # ECR Container Registry Configuration
@@ -293,6 +311,34 @@ variable "ecr_image_tag_mutability" {
     condition     = contains(["MUTABLE", "IMMUTABLE"], var.ecr_image_tag_mutability)
     error_message = "ECR image tag mutability must be MUTABLE or IMMUTABLE."
   }
+}
+
+# ========================================
+# ALB Configuration
+# ========================================
+
+variable "enable_https" {
+  description = "Enable HTTPS listener on public ALB. Requires alb_certificate_arn to be set."
+  type        = bool
+  default     = false
+}
+
+variable "alb_certificate_arn" {
+  description = "ACM certificate ARN for HTTPS listener on public ALB. Required if enable_https is true."
+  type        = string
+  default     = ""
+}
+
+variable "enable_alb_access_logs" {
+  description = "Enable access logs for public ALB. Requires alb_access_logs_bucket to be set."
+  type        = bool
+  default     = false
+}
+
+variable "alb_access_logs_bucket" {
+  description = "S3 bucket name for ALB access logs. Required if enable_alb_access_logs is true."
+  type        = string
+  default     = ""
 }
 
 # ========================================

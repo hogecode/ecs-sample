@@ -4,7 +4,7 @@
 
 このプロジェクトは、`docs/ARCHITECTURE.md` に記載されたAWSアーキテクチャをTerraformで実装するコードベースです。
 
-**実装期間**: Phase 1-2 (ネットワーク基盤 + セキュリティ)
+**実装期間**: Phase 1-5 (ネットワーク基盤 + セキュリティ + ALB + ECS + RDS)
 
 ---
 
@@ -14,71 +14,91 @@
 
 **モジュール**: `modules/vpc/main.tf`
 
-#### 実装リソース
-
-1. **VPC（terraform-aws-modules/vpc/aws）**
-  - VPC CIDR: 10.0.0.0/16
-  - DNS ホスト名有効化
-  - DNS サポート有効化
-2. **Public Subnets（ALB用）**
-  - インターネットゲートウェイ経由のアウトバウンド通信
-3. **Private Subnets（3層構成）**
-  - **Application Layer**: Next.js ECS用
-  - **API Layer**: Go Server ECS、Bastion用
-  - **Database Layer**: RDS用
-4. **NAT Gateway**
-  - 環境別に自動設定（locals.tfで計算）
-  - 開発環境: 1個（Single AZ、コスト最適化）
-  - ステージング環境: 2個（Multi AZ）
-  - 本番環境: 2個（Multi AZ）
-5. **VPC Flow Logs（セキュリティ監視）**
-  - 本番環境で自動有効化
-  - CloudWatch Logs へ送信
-
-#### 環境別設定
-
-
-| 項目            | Dev         | Staging     | Prod         |
-| ------------- | ----------- | ----------- | ------------ |
-| AZ数           | 1           | 2           | 2            |
-| NAT GW数       | 1           | 2           | 2            |
-| VPC Flow Logs | ❌           | ❌           | ✅            |
-| RDS Instance  | db.t3.micro | db.t3.small | db.t3.medium |
-
-
----
+実装リソース:
+- VPC (terraform-aws-modules/vpc/aws を使用)
+- Public Subnets（ALB用）
+- Private Subnets（3層構成：Application、API、Database）
+- NAT Gateway（環境別に自動設定）
+- VPC Flow Logs（本番環境で自動有効化）
+- VPC Endpoints（S3、DynamoDB、Secrets Manager、ECR、CloudWatch等）
 
 ### Phase 2: セキュリティグループ ✅
 
 **モジュール**: `modules/security_group/main.tf`
 
-#### 実装リソース（6種類）
+実装リソース（8種類）:
+1. ALB Public Security Group
+2. Next.js ECS Security Group
+3. Private ALB Security Group
+4. Go Server ECS Security Group
+5. RDS Security Group
+6. Bastion Security Group
+7. Redis Security Group
+8. VPC Endpoints Security Group
 
-1. **ALB Public Security Group**
-  - インバウンド: HTTP (80)、HTTPS (443) from 0.0.0.0/0
-  - アウトバウンド: Next.js (3000) へ
-2. **Next.js ECS Security Group**
-  - インバウンド: 3000 from ALB
-  - アウトバウンド: Private ALB (8080)、AWS APIs (443)、DNS (53)
-3. **Private ALB Security Group**
-  - インバウンド: 8080 from Next.js
-  - アウトバウンド: Go Server (8080)、AWS APIs (443)
-4. **Go Server ECS Security Group**
-  - インバウンド: 8080 from Private ALB
-  - アウトバウンド: RDS (3306/5432)、AWS APIs (443)、DNS (53)
-5. **RDS Security Group**
-  - インバウンド: MySQL (3306)、PostgreSQL (5432) from Go Server & Bastion
-  - アウトバウンド: すべて許可（標準的）
-6. **Bastion Security Group**
-  - インバウンド: SSM Session Manager のみ（SSH キー不要）
-  - アウトバウンド: RDS (3306/5432)、AWS APIs (443)、DNS (53)
+### Phase 3: Application Load Balancer ✅
 
-#### セキュリティ原則
+**モジュール**: `modules/alb/main.tf`
 
-- **最小権限の原則**: 必要なポート・プロトコルのみを許可
-- **レイヤー分離**: 各レイヤー間の通信を明確に制限
-- **内部通信**: セキュリティグループ間の相互参照で制御
-- **外部通信**: CIDR ブロック指定で制限
+実装リソース:
+- **Public ALB**
+  - HTTP（→HTTPSリダイレクト可能）+ HTTPS リスナー
+  - Next.js ターゲットグループ
+  - Health Check（パス: `/`）
+  
+- **Private ALB**
+  - HTTP リスナー（ポート: 8080）
+  - Go Server ターゲットグループ
+  - Health Check（パス: `/health`）
+
+### Phase 4: ECS Configuration ✅
+
+**モジュール**: `modules/ecs/main.tf`
+
+実装リソース:
+- **ECR Repositories**
+  - Next.js 用 ECR
+  - Go Server 用 ECR
+  - ライフサイクルポリシー（最新10個保持、7日後に未タグイメージ削除）
+  - イメージスキャン有効化
+
+- **ECS Cluster**
+  - CloudWatch Container Insights 有効化
+  - Fargate + Fargate Spot キャパシティプロバイダー
+  - 環境別キャパシティ自動設定
+
+- **CloudWatch Log Groups**
+  - `/ecs/{project}-nextjs-{env}`
+  - `/ecs/{project}-go-server-{env}`
+  - `/ecs/{project}-xray-{env}`
+
+- **IAM Roles**
+  - ECS Task Execution Role
+  - Next.js Task Role（CloudWatch、X-Ray、メトリクス許可）
+  - Go Server Task Role（RDS IAM Auth、Secrets Manager、X-Ray許可）
+
+### Phase 5: RDS Database ✅
+
+**モジュール**: `modules/rds/main.tf`
+
+実装リソース:
+- **RDS Instance**
+  - Multi-AZ 対応（環境別に自動設定）
+  - 暗号化有効化（KMS）
+  - IAM Database Authentication 有効化
+  - Enhanced Monitoring 有効化
+  - 削除保護（本番のみ）
+
+- **DB Subnet Group**
+  - Private DB Subnets に配置
+
+- **Parameter Group**
+  - MySQL/PostgreSQL パラメータカスタマイズ対応
+
+- **CloudWatch Alarms**
+  - CPU 使用率（>80%）
+  - ストレージ空き容量（<10GB）
+  - Database Connections（>80）
 
 ---
 
@@ -87,72 +107,50 @@
 ```
 terraform/
 ├── ルートモジュール設定
-│   ├── provider.tf              # AWS Provider（v5.0）+ 複数プロバイダー定義
-│   ├── variables.tf             # 環境共通の変数（50+）
-│   ├── outputs.tf               # 出力値（20+）
+│   ├── provider.tf              # AWS Provider（v5.0）
+│   ├── variables.tf             # 環境共通の変数（60+）
+│   ├── outputs.tf               # 出力値（30+）
 │   ├── locals.tf                # ローカル値・計算ロジック
-│   ├── main.tf                  # モジュール呼び出し
+│   ├── main.tf                  # モジュール呼び出し（Phase 1-5）
 │   └── versions.tf              # Terraform & Provider バージョン定義
 │
 ├── 環境別設定（.tfvars）
 │   └── environments/
-│       ├── dev.tfvars           # 開発環境（Single AZ、最小リソース）
-│       ├── staging.tfvars       # ステージング環境（Multi AZ、テスト用）
-│       └── prod.tfvars          # 本番環境（Multi AZ、HA対応）
+│       ├── dev.tfvars           # 開発環境
+│       ├── staging.tfvars       # ステージング環境
+│       └── prod.tfvars          # 本番環境
 │
 ├── modules/
-│   ├── vpc/                     # VPC・ネットワークモジュール
-│   │   ├── main.tf              # terraform-aws-modules/vpc + VPC Endpoints
-│   │   ├── variables.tf          # 10の入力変数
-│   │   └── outputs.tf            # 20+の出力値
+│   ├── vpc/                     # Phase 1: ネットワークモジュール
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
 │   │
-│   └── security_group/          # セキュリティグループモジュール
-│       ├── main.tf              # 6個のセキュリティグループ
-│       ├── variables.tf          # 入力変数
-│       └── outputs.tf            # 出力値
+│   ├── security_group/          # Phase 2: セキュリティグループモジュール
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   ├── alb/                     # Phase 3: ALBモジュール
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   ├── ecs/                     # Phase 4: ECSモジュール
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   └── rds/                     # Phase 5: RDSモジュール
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
 │
 └── ドキュメント
-    ├── README.md                # 詳細な使用方法
-    ├── IMPLEMENTATION_SUMMARY.md # このファイル
-    └── .gitignore               # Git 除外設定
+    ├── README.md
+    ├── IMPLEMENTATION_SUMMARY.md （このファイル）
+    └── .gitignore
 ```
-
----
-
-
-
-### クイックスタート
-
-```bash
-cd terraform
-
-# 開発環境
-terraform plan -var-file="environments/dev.tfvars"
-terraform apply -var-file="environments/dev.tfvars" -auto-approve
-
-# ステージング環境
-terraform plan -var-file="environments/staging.tfvars"
-terraform apply -var-file="environments/staging.tfvars"
-
-# 本番環境（手動確認必須）
-terraform plan -var-file="environments/prod.tfvars"
-terraform apply -var-file="environments/prod.tfvars"
-```
-
-### 環境別設定の違い
-
-
-| 項目                        | Dev         | Staging     | Prod         |
-| ------------------------- | ----------- | ----------- | ------------ |
-| `availability_zones`      | 1個          | 2個          | 2個           |
-| `enable_nat_gateway`      | true        | true        | true         |
-| `nat_gateway_count`       | 1（自動）       | 2（自動）       | 2（自動）        |
-| `nextjs_desired_count`    | 1（自動）       | 2（自動）       | 3（自動）        |
-| `go_server_desired_count` | 1（自動）       | 2（自動）       | 3（自動）        |
-| `rds_instance_class`      | db.t3.micro | db.t3.small | db.t3.medium |
-| `rds_multi_az`            | false（自動）   | false（自動）   | true（自動）     |
-| `enable_vpc_flow_logs`    | false（自動）   | false（自動）   | true（自動）     |
-
 
 ---
 
@@ -178,249 +176,165 @@ terraform apply -var-file="environments/staging.tfvars"
 terraform apply -var-file="environments/prod.tfvars"
 ```
 
-### 状態確認
+### 出力値の確認
 
 ```bash
-# 出力値の表示
+# すべての出力値
 terraform output
 
-# リソース一覧
-terraform state list
-
-# リソース詳細
-terraform show
-```
-
-### 削除
-
-```bash
-terraform destroy -var-file="environments/dev.tfvars"
+# 特定の出力値
+terraform output public_alb_dns_name
+terraform output rds_instance_endpoint
 ```
 
 ---
 
 ## 📊 リソース作成数
 
-### Phase 1-2 で作成されるAWSリソース数
+### Phase 1-5 で作成されるAWSリソース数
 
-
-| リソースタイプ          | Dev     | Staging | Prod    |
-| ---------------- | ------- | ------- | ------- |
-| VPC              | 1       | 1       | 1       |
-| Public Subnets   | 1       | 2       | 2       |
-| Private Subnets  | 3       | 6       | 6       |
-| Internet Gateway | 1       | 1       | 1       |
-| NAT Gateway      | 1       | 2       | 2       |
-| Route Table      | 4       | 4       | 4       |
-| Security Group   | 6       | 6       | 6       |
-| **合計**           | **~17** | **~22** | **~22** |
-
+| リソースタイプ | Dev | Staging | Prod |
+|---|---|---|---|
+| VPC | 1 | 1 | 1 |
+| Subnets | 7 | 14 | 14 |
+| Internet Gateway | 1 | 1 | 1 |
+| NAT Gateway | 1 | 2 | 2 |
+| Route Table | 6 | 6 | 6 |
+| VPC Endpoints | 11 | 11 | 11 |
+| Security Groups | 8 | 8 | 8 |
+| ALB (Public) | 1 | 1 | 1 |
+| ALB (Private) | 1 | 1 | 1 |
+| Target Groups | 2 | 2 | 2 |
+| ECS Cluster | 1 | 1 | 1 |
+| ECR Repositories | 2 | 2 | 2 |
+| CloudWatch Log Groups | 3 | 3 | 3 |
+| IAM Roles | 4 | 4 | 4 |
+| RDS Instance | 1 | 1 | 1 |
+| DB Subnet Group | 1 | 1 | 1 |
+| Parameter Group | 1 | 1 | 1 |
+| CloudWatch Alarms | 3 | 3 | 3 |
+| **合計** | **~60** | **~75** | **~75** |
 
 ---
 
 ## 🔐 セキュリティ特性
 
-### ネットワークセキュリティ
-
 ✅ **多層防御アーキテクチャ**
-
 - Public Layer: ALB のみ
 - App Layer: Next.js ECS（プライベートサブネット）
 - API Layer: Go Server ECS（プライベートサブネット）
 - DB Layer: RDS（プライベートサブネット）
 
-✅ **アクセス制御**
+✅ **暗号化**
+- RDS: KMS による保存時暗号化
+- VPC Endpoints: プライベート通信で NAT Gateway コスト削減
+- VPC Flow Logs: ネットワークトラフィック監視
 
-- セキュリティグループで厳格に制御
-- セキュリティグループ間の相互参照で層間通信を管理
-- 最小権限の原則を適用
+✅ **IAM セキュリティ**
+- RDS IAM Database Authentication
+- ECS Task Role による最小権限の原則
+- Secrets Manager との統合
 
-✅ **アウトバウンド通信**
-
-- NAT Gateway 経由でプライベートサブネットから通信
-- VPC Endpoints で AWS サービスへのコスト最適化
-
-### タグ戦略
-
-✅ **自動タグ付け**
-
-- 環境別タグ（dev、staging、prod）
-- プロジェクト名タグ
-- CostCenter タグ（コスト管理用）
-- Owner タグ（責任者管理用）
+✅ **監視・ロギング**
+- CloudWatch Container Insights
+- X-Ray による分散トレース
+- Enhanced RDS Monitoring
+- CloudWatch Alarms
 
 ---
 
-## � コスト最適化
+## 環境別設定
 
-### 開発環境
-
-- **Single AZ** → Multi AZ より低コスト
-- **NAT Gateway 1個** → 高可用性より経済性重視（自動設定）
-- **小さいインスタンスクラス**（db.t3.micro）
-- **VPC Flow Logs 無効化**（自動）
-
-### ステージング環境
-
-- **Multi AZ** → 本番環境との同一性確保
-- **NAT Gateway 2個** → 障害対策（自動設定）
-- **db.t3.small** → テスト環境対応
-- **VPC Flow Logs 無効化**（自動、コスト削減）
-
-### 本番環境
-
-- **Multi AZ** → 99.9% SLA 実現
-- **NAT Gateway 2個** → 高可用性（自動設定）
-- **db.t3.medium** → 本番グレード
-- **VPC Flow Logs 有効** → セキュリティ監視（自動）
-
----
-
-## 🔄 主な改善点（terraform22を参考）
-
-### ✨ シンプル化
-
-
-| 項目     | terraform22 | このプロジェクト                   |
-| ------ | ----------- | -------------------------- |
-| 変数定義行数 | 746行        | ~400行                      |
-| プロバイダー | AWS のみ      | AWS + random + time + null |
-| 環境別調整  | 変数で管理       | locals + .tfvars で管理       |
-| モジュール数 | 15個         | 2個（段階的実装）                  |
-
-
-### ✨ 実装の工夫
-
-1. **locals.tf で環境別ロジック集約**
-  - NAT Gateway数の自動計算
-  - RDS instance class の自動選択
-  - VPC Flow Logs の自動有効化（本番のみ）
-2. **variables.tf の体系的な分類**
-  - セクションコメントで変数をグループ化
-  - 各変数に詳細な説明とvalidation ルール
-  - デフォルト値を明確化
-3. **environments/ フォルダで環境管理**
-  - dev.tfvars, staging.tfvars, prod.tfvars
-  - 各環境の設定を一ファイルで管理
-  - -var-file で環境切り替え可能
-4. **provider.tf の強化**
-  - random, time, null プロバイダー追加
-  - S3 backend 設定テンプレート用意
-  - default_tags で自動タグ付け
+| 項目 | Dev | Staging | Prod |
+|---|---|---|---|
+| AZ数 | 1 | 2 | 2 |
+| NAT Gateway数 | 1 | 2 | 2 |
+| Fargate Spot | ❌ | ✅ | ✅ |
+| RDS Multi-AZ | ❌ | ✅ | ✅ |
+| RDS Instance | db.t3.small | db.t3.small | db.t3.medium |
+| RDS Backup | 3日 | 3日 | 7日 |
+| Logs Retention | 3日 | 14日 | 30日 |
+| VPC Flow Logs | ❌ | ❌ | ✅ |
+| Deletion Protection | ❌ | ❌ | ✅ |
 
 ---
 
 ## 📈 メトリクス
 
-- **モジュール数**: 2 (vpc, security_group)
-- **ファイル数**: 12
-- **変数定義数**: 50+
-- **出力値数**: 20+
-- **セキュリティグループ**: 6個
+- **モジュール数**: 5 (vpc, security_group, alb, ecs, rds)
+- **ファイル数**: 18+
+- **変数定義数**: 60+
+- **出力値数**: 40+
+- **セキュリティグループ**: 8個
 - **環境設定ファイル**: 3個（dev, staging, prod）
-- **コード行数**: 800+行
+- **コード行数**: 1500+行
 
 ---
 
 ## 🎯 品質基準
 
 ✅ **実装基準**:
-
-- terraform validate 通過
-- terraform fmt 準拠
-- AWS公式モジュール使用
+- Terraform validate 通過
+- AWS公式モジュール使用（VPC）
 - セキュリティベストプラクティス準拠
-- タグ戦略統一
+- 環境別の自動設定
 - 変数検証ルール整備
 
 ✅ **ドキュメント**:
-
 - 変数に説明を記載
 - モジュールに説明を記載
 - 環境別設定を明確化
-- 使用方法を詳細説明
 
 ---
 
-## 📝 次のステップ（Phase 3-6）
+## 📝 次のステップ（Phase 6以降）
 
-### Phase 3: Application Load Balancer
+### Phase 6: ECS Task Definitions & Services
 
-- `modules/alb/` を新規作成
-- Public ALB: Next.js ターゲット
-- Private ALB: Go Server ターゲット
-- リスナールール・ターゲットグループ
+- `modules/ecs_services/`
+- Next.js & Go Server タスク定義
+- Auto Scaling設定
+- ローリングアップデート設定
 
-### Phase 4: ECS
+### Phase 7: ストレージ（S3）
 
-- `modules/ecs/` を新規作成
-- ECS Cluster
-- ECR Repositories
-- Task Definitions（Next.js、Go Server、X-Ray Daemon）
-- ECS Services
-- Auto Scaling
+- `modules/s3/`
+- Artifact Bucket
+- Logs Bucket
+- Terraform State Bucket
 
-### Phase 5: RDS
+### Phase 8: Bastion & 管理ツール
 
-- `modules/rds/` を新規作成
-- RDS インスタンス
-- DB Subnet Group
-- Parameter Group
-- Multi-AZ フェイルオーバー
-
-### Phase 6: ストレージ・その他
-
-- `modules/s3/`, `modules/cloudwatch/` 等
-- S3 Buckets（artifact、logs、state）
-- CloudWatch ログ・ダッシュボード
-- WAF（オプション）
-- Bastion Host
+- `modules/bastion/`
+- Fargate ベース Bastion
+- Session Manager 統合
 
 ---
 
-## � 関連リソース
+## 🌟 主な特徴
 
-### プロジェクト内
+### Infrastructure as Code の利点
 
-- `docs/ARCHITECTURE.md` - 詳細なアーキテクチャ設計
-- `docs/SECURITY.md` - セキュリティベストプラクティス
-- `docs/OPERATIONS.md` - 運用手順
-- `terraform/README.md` - 詳細な使用方法
+1. **再現性** - 環境別に同じコードで実装
+2. **バージョン管理** - Git で履歴追跡
+3. **モジュール化** - 再利用可能で保守性向上
+4. **自動化** - CI/CD パイプライン統合可能
 
-### 外部リソース
+### 環境管理
 
-- [Terraform AWS Modules](https://registry.terraform.io/modules/terraform-aws-modules/)
-- [AWS VPC Best Practices](https://docs.aws.amazon.com/vpc/latest/userguide/)
-- [AWS Well-Architected](https://aws.amazon.com/architecture/well-architected/)
+- `locals.tf` で環境別ロジック集約
+- `variables.tf` で変数を体系的に分類
+- `environments/` フォルダで環境別設定を一元化
 
----
+### コスト最適化
 
-## ✨ 主な特徴
-
-### Terraform 実装の利点
-
-1. **Infrastructure as Code**
-  - バージョン管理可能
-  - ピアレビュー対応
-  - 変更履歴追跡可能
-2. **再現性**
-  - 環境別に同じコードで実装
-  - デプロイ自動化可能
-3. **モジュール化**
-  - 再利用可能
-  - テスト容易性
-  - 保守性向上
-4. **環境管理**
-  - .tfvars で環境切り替え
-  - locals で自動計算
-  - CI/CD パイプライン統合可能
-5. **ドキュメント品質**
-  - コード自体がドキュメント
-  - 変数・出力に説明を記載
+- 開発環境: Single AZ、Fargate Spot 非使用
+- ステージング: Fargate Spot 80% で費用削減
+- 本番環境: Multi-AZ、Fargate で安定性確保
 
 ---
 
-## � 重要な注意事項
+## ⚠️ 重要な注意事項
 
 ### 機密情報の管理
 
@@ -457,10 +371,33 @@ backend "s3" {
 
 ---
 
-**実装完了日**: 2026年4月20日
+## 📚 参考リソース
 
-**Phase 1-2 完了**: ✅ Network & Security
+### プロジェクト内
 
-**次の実装予定**: Phase 3 (Application Load Balancer)
+- `docs/ARCHITECTURE.md` - 詳細なアーキテクチャ設計
+- `docs/SECURITY.md` - セキュリティベストプラクティス
+- `docs/OPERATIONS.md` - 運用手順
+- `terraform/README.md` - 詳細な使用方法
 
-**参考**: terraform22フォルダを参照にしながら、シンプルさと実用性のバランスを取った改善を実施
+### 外部リソース
+
+- [Terraform AWS Modules](https://registry.terraform.io/modules/terraform-aws-modules/)
+- [AWS VPC Best Practices](https://docs.aws.amazon.com/vpc/latest/userguide/)
+- [AWS ECS Best Practices](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/)
+- [AWS RDS Best Practices](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/)
+
+---
+
+## ✨ 実装完了
+
+**実装完了日**: 2026年4月21日
+
+**Phase 1-5 完了**: ✅ Network + Security + ALB + ECS + RDS
+
+**次の実装予定**: Phase 6 (ECS Services & Auto Scaling)
+
+---
+
+このアーキテクチャは `docs/ARCHITECTURE.md` で設計されたマイクロサービスベースのECS Fargate システムを、完全に Terraform で実装し、本番レベルの品質を保証します。
+

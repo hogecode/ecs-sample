@@ -81,6 +81,19 @@ locals {
   enable_s3_encryption = true
 
   # ========================================
+  # ECS Configuration
+  # ========================================
+  # Container Insights monitoring
+  enable_container_insights = true
+
+  # Fargate Spot for cost optimization
+  enable_fargate_spot = local.is_dev ? false : true
+
+  # Capacity provider settings
+  capacity_provider_base_count = local.is_dev ? 1 : 1
+  capacity_provider_spot_weight = local.is_dev ? 0 : 50
+
+  # ========================================
   # Cost Optimization
   # ========================================
   # NAT Gateway count optimization

@@ -92,6 +92,84 @@ output "availability_zones" {
   value       = var.availability_zones
 }
 
+# ALB Outputs
+output "public_alb_id" {
+  description = "ID of the public ALB"
+  value       = module.alb.public_alb_id
+}
+
+output "public_alb_dns_name" {
+  description = "DNS name of the public ALB"
+  value       = module.alb.public_alb_dns_name
+}
+
+output "private_alb_dns_name" {
+  description = "DNS name of the private ALB"
+  value       = module.alb.private_alb_dns_name
+}
+
+output "nextjs_target_group_arn" {
+  description = "ARN of the Next.js target group"
+  value       = module.alb.nextjs_target_group_arn
+}
+
+output "go_server_target_group_arn" {
+  description = "ARN of the Go Server target group"
+  value       = module.alb.go_server_target_group_arn
+}
+
+# ECS Outputs
+output "ecs_cluster_id" {
+  description = "ECS Cluster ID"
+  value       = module.ecs.ecs_cluster_id
+}
+
+output "ecs_cluster_name" {
+  description = "ECS Cluster name"
+  value       = module.ecs.ecs_cluster_name
+}
+
+output "nextjs_repository_url" {
+  description = "ECR repository URL for Next.js"
+  value       = module.ecs.nextjs_repository_url
+}
+
+output "go_server_repository_url" {
+  description = "ECR repository URL for Go server"
+  value       = module.ecs.go_server_repository_url
+}
+
+output "nextjs_log_group_name" {
+  description = "CloudWatch Log Group name for Next.js"
+  value       = module.ecs.nextjs_log_group_name
+}
+
+output "go_server_log_group_name" {
+  description = "CloudWatch Log Group name for Go server"
+  value       = module.ecs.go_server_log_group_name
+}
+
+# RDS Outputs
+output "rds_instance_endpoint" {
+  description = "RDS Instance endpoint (hostname:port)"
+  value       = module.rds.rds_instance_endpoint
+}
+
+output "rds_instance_address" {
+  description = "RDS Instance hostname"
+  value       = module.rds.rds_instance_address
+}
+
+output "rds_instance_port" {
+  description = "RDS Instance port"
+  value       = module.rds.rds_instance_port
+}
+
+output "rds_instance_name" {
+  description = "RDS Instance database name"
+  value       = module.rds.rds_instance_name
+}
+
 # Environment Info
 output "environment" {
   description = "Environment name"
