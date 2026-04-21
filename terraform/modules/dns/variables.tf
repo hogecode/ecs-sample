@@ -1,20 +1,14 @@
-variable "app_name" {
-  description = "Name of the application"
-  type        = string
-}
+# ========================================
+# Route53 Module Variables
+# ========================================
 
-variable "environment" {
-  description = "Environment name"
+variable "route53_zone_id" {
+  description = "Route53 zone ID"
   type        = string
 }
 
 variable "domain_name" {
-  description = "Domain name"
-  type        = string
-}
-
-variable "route53_zone_id" {
-  description = "Route53 hosted zone ID"
+  description = "Domain name for the application"
   type        = string
 }
 
@@ -24,17 +18,22 @@ variable "alb_dns_name" {
 }
 
 variable "alb_zone_id" {
-  description = "ALB hosted zone ID"
+  description = "ALB Zone ID"
   type        = string
-}
-
-variable "common_tags" {
-  description = "Common tags for all resources"
-  type        = map(string)
 }
 
 variable "dmarc_record" {
-  description = "DMARC TXT record value"
+  description = "DMARC record value"
   type        = string
   default     = ""
+}
+
+variable "app_name" {
+  description = "Application name"
+  type        = string
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
 }
