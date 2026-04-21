@@ -267,23 +267,75 @@ Outbound:
 
 ### 7. Bastion ホスト設計
 
-**Fargate ベース**
+**セッションマネージャーベース（Fargate）**
+- **デプロイ方法**: ECS Fargate タスク（EC2 不要）
 - **イメージ**: Amazon Linux 2
 - **配置**: Private Subnet 2 (API Layer)
-- **アクセス方法**: AWS Session Manager（SSH キー不要）
-- **自動セットアップ**: 
-  - User Data Script で SSM Agent インストール
-  - Ansible で MySQL/PostgreSQL クライアント、AWS CLI インストール
-  - CloudWatch Logs エージェント設定
+- **アクセス方法**: AWS Session Manager（SSH キー、踏み台サーバー不要）
+- **自動設定**:
+  - IAM ロール: SSM Session Manager 権限を付与
+  - CloudWatch Logs エージェント: 全セッション操作ログを記録
+  - AWS CLI プリインストール
+  - MySQL/PostgreSQL クライアント: User Data で自動インストール
 - **用途**: 
-  - RDS への直接接続（DB 管理タスク）
-  - 緊急対応
-  - 監査記録: CloudWatch Logs に自動記録
+  - RDS への直接接続（DB 管理タスク・マイグレーション）
+  - VPC 内リソース診断
+  - 緊急対応・トラブルシューティング
+  - 監査記録: CloudWatch Logs に全操作を自動記録（日時・ユーザー・コマンド・結果）
 
 **ネットワーク**:
 - **セキュリティグループ**: Bastion SG
-- **アウトバウンド**: RDS へのみアクセス許可
-- **IAM ロール**: RDS IAM Database Auth 対応
+  - Inbound: VPC Endpoint（SSM）から接続
+  - Outbound: RDS + AWS APIs へのアクセス許可
+- **IAM ロール**:
+  - `ssm:UpdateInstanceInformation` - Session Manager 登録
+  - `ssmmessages:CreateControlChannel` - セッション確立
+  - `logs:CreateLogStream`, `logs:PutLogEvents` - CloudWatch Logs 記録
+  - `secretsmanager:GetSecretValue` - DB 認証情報取得
+  - `rds-db:connect` - RDS IAM Database Auth 対応
+
+**セキュリティの利点**:
+- SSH キー管理が不要
+- ネットワーク経由のアクセス記録が CloudWatch Logs に自動保存
+- IAM と連携した統一的なアクセス制御
+- AWS CloudTrail で API 呼び出しも監査可能
+
+### 8. 監視・ログ設計
+
+**CloudWatch Logs**:
+- **ECS ログ**: `/ecs/{app}-{env}` グループ
+  - Next.js: `/ecs/nextjs-{env}` (保持: 14日)
+  - Go Server: `/ecs/go-server-{env}` (保持: 14日)
+  - Bastion: `/ecs/bastion-{env}` (保持: 30日・監査用)
+- **RDS ログ**: `rds/{db-instance}/error`, `rds/{db-instance}/slowquery` (保持: 7日)
+- **Lambda ログ**: `/aws/lambda/{function-name}` (保持: 3-14日)
+- **ログ暗号化**: KMS キーで暗号化（本番環境推奨）
+
+**CloudWatch Container Insights**:
+- ECS クラスタ、サービス、タスク レベルのメトリクス可視化
+- CPU、メモリ、ネットワーク使用率をリアルタイム監視
+- コンテナのパフォーマンス問題を即座に検出
+
+**CloudWatch Alarms**:
+- **ECS アラーム**:
+  - CPU使用率 > 80% （2回連続）
+  - メモリ使用率 > 85% （2回連続）
+  - タスク実行失敗率 > 5%
+- **RDS アラーム**:
+  - CPU使用率 > 80% （2回連続）
+  - DB接続数 > 80
+  - ストレージ < 10GB （容量警告）
+  - DB レプリケーション遅延 > 1秒
+- **通知先**: SNS トピック → メール/Slack/PagerDuty
+
+**X-Ray 分散トレース**:
+- ECS タスク内に X-Ray Daemon サイドカー配置
+- API 呼び出しの遅延箇所を可視化
+- データベースクエリの性能分析
+
+**CloudTrail**:
+- IAM、RDS、ECS API 呼び出しの監査
+- 本番環境で有効推奨（S3 に 90日保存後 Glacier へ移行）
 
 ## トラフィックフロー
 

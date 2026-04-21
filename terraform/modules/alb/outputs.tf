@@ -1,60 +1,63 @@
+# ========================================
 # ALB Module Outputs
+# ========================================
 
-# Public ALB
 output "public_alb_id" {
-  description = "ID of the public ALB"
-  value       = aws_lb.public.id
+  description = "Public ALB ID"
+  value       = module.public_alb.lb_id
 }
 
 output "public_alb_arn" {
-  description = "ARN of the public ALB"
-  value       = aws_lb.public.arn
+  description = "Public ALB ARN"
+  value       = module.public_alb.lb_arn
 }
 
 output "public_alb_dns_name" {
-  description = "DNS name of the public ALB"
-  value       = aws_lb.public.dns_name
+  description = "Public ALB DNS name"
+  value       = module.public_alb.lb_dns_name
 }
 
 output "public_alb_zone_id" {
-  description = "Zone ID of the public ALB"
-  value       = aws_lb.public.zone_id
+  description = "Public ALB Zone ID"
+  value       = module.public_alb.lb_zone_id
 }
 
-# Next.js Target Group
 output "nextjs_target_group_arn" {
-  description = "ARN of the Next.js target group"
-  value       = aws_lb_target_group.nextjs.arn
+  description = "Next.js target group ARN"
+  value       = module.public_alb.target_group_arns[0]
 }
 
 output "nextjs_target_group_name" {
-  description = "Name of the Next.js target group"
-  value       = aws_lb_target_group.nextjs.name
+  description = "Next.js target group name"
+  value       = module.public_alb.target_group_names[0]
 }
 
-# Private ALB
 output "private_alb_id" {
-  description = "ID of the private ALB"
-  value       = aws_lb.private.id
+  description = "Private ALB ID"
+  value       = module.private_alb.lb_id
 }
 
 output "private_alb_arn" {
-  description = "ARN of the private ALB"
-  value       = aws_lb.private.arn
+  description = "Private ALB ARN"
+  value       = module.private_alb.lb_arn
 }
 
 output "private_alb_dns_name" {
-  description = "DNS name of the private ALB"
-  value       = aws_lb.private.dns_name
+  description = "Private ALB DNS name"
+  value       = module.private_alb.lb_dns_name
 }
 
-# Go Server Target Group
+output "private_alb_zone_id" {
+  description = "Private ALB Zone ID"
+  value       = module.private_alb.lb_zone_id
+}
+
 output "go_server_target_group_arn" {
-  description = "ARN of the Go Server target group"
-  value       = aws_lb_target_group.go_server.arn
+  description = "Go Server target group ARN"
+  value       = module.private_alb.target_group_arns[0]
 }
 
 output "go_server_target_group_name" {
-  description = "Name of the Go Server target group"
-  value       = aws_lb_target_group.go_server.name
+  description = "Go Server target group name"
+  value       = module.private_alb.target_group_names[0]
 }

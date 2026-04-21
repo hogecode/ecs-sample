@@ -1,41 +1,31 @@
 # ========================================
-# ElastiCache Redis Cluster
+# ElastiCache Redis Cluster (using terraform-aws-modules)
 # ========================================
 
-resource "aws_elasticache_parameter_group" "redis" {
-  family = "redis7"
-  name   = "${var.app_name}-${var.environment}-redis-params"
+module "elasticache" {
+  source = "terraform-aws-modules/elasticache/aws"
+  version = "~> 1.0"
 
-  parameter {
-    name  = "maxmemory-policy"
-    value = "allkeys-lru"
-  }
-
-  tags = merge(var.common_tags, {
-    Name = "${var.app_name}-${var.environment}-redis-params"
-  })
-}
-
-resource "aws_elasticache_subnet_group" "redis" {
-  name       = "${var.app_name}-${var.environment}-redis-subnet-group"
-  subnet_ids = var.private_subnets
-
-  tags = merge(var.common_tags, {
-    Name = "${var.app_name}-${var.environment}-redis-subnet-group"
-  })
-}
-
-resource "aws_elasticache_cluster" "redis" {
   cluster_id           = "${var.app_name}-${var.environment}-redis"
   engine               = "redis"
+  engine_version       = "7.0"
   node_type            = var.redis_node_type
   num_cache_nodes      = 1
-  parameter_group_name = aws_elasticache_parameter_group.redis.name
   port                 = 6379
-  subnet_group_name    = aws_elasticache_subnet_group.redis.name
+  parameter_group_name = "${var.app_name}-${var.environment}-redis-params"
+  subnet_group_name    = "${var.app_name}-${var.environment}-redis-subnet-group"
   security_group_ids   = [var.redis_security_group_id]
 
-  # Enable automatic backups for data protection
+  # Parameter group
+  parameter_group_family = "redis7"
+  parameters = {
+    maxmemory-policy = "allkeys-lru"
+  }
+
+  # Subnet group
+  subnet_ids = var.private_subnets
+
+  # Backup configuration
   snapshot_retention_limit = var.snapshot_retention_limit
   snapshot_window          = var.snapshot_window
   maintenance_window       = var.maintenance_window

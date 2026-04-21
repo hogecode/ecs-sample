@@ -1,147 +1,153 @@
-# ALB Module - Direct AWS resources for flexibility
-
 # ========================================
-# Public ALB for Next.js frontend
+# ALB Module - Using terraform-aws-alb module
 # ========================================
 
-resource "aws_lb" "public" {
-  name               = "${var.project_name}-public-alb-${var.environment}"
-  internal           = false
+module "public_alb" {
+  source  = "terraform-aws-modules/alb/aws"
+  version = "~> 9.0"
+
+  name            = "${var.project_name}-public-alb-${var.environment}"
+  internal        = false
   load_balancer_type = "application"
-  security_groups    = [var.alb_public_security_group_id]
-  subnets            = var.public_subnet_ids
+  vpc_id          = var.vpc_id
+  subnets         = var.public_subnet_ids
+  security_groups = [var.alb_public_security_group_id]
 
-  enable_deletion_protection       = var.environment == "prod" ? true : false
-  enable_http2                     = true
+  enable_deletion_protection = var.environment == "prod" ? true : false
+  enable_http2               = true
   enable_cross_zone_load_balancing = true
+
+  # HTTP listener
+  http_tcp_listeners = [
+    {
+      port        = 80
+      protocol    = "HTTP"
+      action_type = "forward"
+      target_group_index = 0
+    }
+  ]
+
+  # HTTPS listener (conditional)
+  https_listeners = var.enable_https ? [
+    {
+      port            = 443
+      protocol        = "HTTPS"
+      certificate_arn = var.alb_certificate_arn
+      action_type     = "forward"
+      target_group_index = 0
+    }
+  ] : []
+
+  # Redirect HTTP to HTTPS (conditional)
+  http_tcp_listeners_rules = var.enable_https ? [
+    {
+      listener_index = 0
+      priority       = 1
+      actions = [
+        {
+          type = "redirect"
+          redirect = {
+            port        = "443"
+            protocol    = "HTTPS"
+            status_code = "HTTP_301"
+          }
+        }
+      ]
+      conditions = [
+        {
+          path_pattern = ["/*"]
+        }
+      ]
+    }
+  ] : []
+
+  # Target group for Next.js
+  target_groups = [
+    {
+      name            = "${var.project_name}-nextjs-tg-${var.environment}"
+      backend_protocol = "HTTP"
+      backend_port    = 3000
+      target_type     = "ip"
+      health_check = {
+        enabled             = true
+        healthy_threshold   = 2
+        unhealthy_threshold = 3
+        timeout             = 5
+        interval            = 30
+        path                = "/"
+        matcher             = "200-399"
+        port                = "traffic-port"
+      }
+      stickiness = {
+        type            = "lb_cookie"
+        enabled         = true
+        cookie_duration = 86400
+      }
+      tags = {
+        Name = "${var.project_name}-nextjs-tg-${var.environment}"
+      }
+    }
+  ]
 
   tags = {
     Name = "${var.project_name}-public-alb-${var.environment}"
   }
 }
 
-resource "aws_lb_target_group" "nextjs" {
-  name        = "${var.project_name}-nextjs-tg-${var.environment}"
-  port        = 3000
-  protocol    = "HTTP"
-  vpc_id      = var.vpc_id
-  target_type = "ip"
+module "private_alb" {
+  source  = "terraform-aws-modules/alb/aws"
+  version = "~> 9.0"
 
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/"
-    matcher             = "200-399"
-  }
-
-  stickiness {
-    type            = "lb_cookie"
-    enabled         = true
-    cookie_duration = 86400
-  }
-
-  tags = {
-    Name = "${var.project_name}-nextjs-tg-${var.environment}"
-  }
-}
-
-resource "aws_lb_listener" "public_http" {
-  load_balancer_arn = aws_lb.public.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type = var.enable_https ? "redirect" : "forward"
-
-    dynamic "redirect" {
-      for_each = var.enable_https ? [1] : []
-      content {
-        port        = "443"
-        protocol    = "HTTPS"
-        status_code = "HTTP_301"
-      }
-    }
-
-    dynamic "target_group_arn" {
-      for_each = var.enable_https ? [] : [aws_lb_target_group.nextjs.arn]
-      content {
-        target_group_arn = target_group_arn.value
-      }
-    }
-  }
-}
-
-resource "aws_lb_listener" "public_https" {
-  count             = var.enable_https ? 1 : 0
-  load_balancer_arn = aws_lb.public.arn
-  port              = "443"
-  protocol          = "HTTPS"
-  certificate_arn   = var.alb_certificate_arn
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.nextjs.arn
-  }
-}
-
-# ========================================
-# Private ALB for Go Server backend
-# ========================================
-
-resource "aws_lb" "private" {
-  name               = "${var.project_name}-private-alb-${var.environment}"
-  internal           = true
+  name            = "${var.project_name}-private-alb-${var.environment}"
+  internal        = true
   load_balancer_type = "application"
-  security_groups    = [var.private_alb_security_group_id]
-  subnets            = var.private_api_subnet_ids
+  vpc_id          = var.vpc_id
+  subnets         = var.private_api_subnet_ids
+  security_groups = [var.private_alb_security_group_id]
 
-  enable_deletion_protection       = var.environment == "prod" ? true : false
-  enable_http2                     = true
+  enable_deletion_protection = var.environment == "prod" ? true : false
+  enable_http2               = true
   enable_cross_zone_load_balancing = true
+
+  # HTTP listener for internal service
+  http_tcp_listeners = [
+    {
+      port        = 8080
+      protocol    = "HTTP"
+      action_type = "forward"
+      target_group_index = 0
+    }
+  ]
+
+  # Target group for Go Server
+  target_groups = [
+    {
+      name            = "${var.project_name}-go-server-tg-${var.environment}"
+      backend_protocol = "HTTP"
+      backend_port    = 8080
+      target_type     = "ip"
+      health_check = {
+        enabled             = true
+        healthy_threshold   = 2
+        unhealthy_threshold = 3
+        timeout             = 5
+        interval            = 30
+        path                = "/health"
+        matcher             = "200-399"
+        port                = "traffic-port"
+      }
+      stickiness = {
+        type            = "lb_cookie"
+        enabled         = true
+        cookie_duration = 86400
+      }
+      tags = {
+        Name = "${var.project_name}-go-server-tg-${var.environment}"
+      }
+    }
+  ]
 
   tags = {
     Name = "${var.project_name}-private-alb-${var.environment}"
-  }
-}
-
-resource "aws_lb_target_group" "go_server" {
-  name        = "${var.project_name}-go-server-tg-${var.environment}"
-  port        = 8080
-  protocol    = "HTTP"
-  vpc_id      = var.vpc_id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/health"
-    matcher             = "200-399"
-  }
-
-  stickiness {
-    type            = "lb_cookie"
-    enabled         = true
-    cookie_duration = 86400
-  }
-
-  tags = {
-    Name = "${var.project_name}-go-server-tg-${var.environment}"
-  }
-}
-
-resource "aws_lb_listener" "private_http" {
-  load_balancer_arn = aws_lb.private.arn
-  port              = "8080"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.go_server.arn
   }
 }

@@ -2,6 +2,9 @@
 # Root Module - Infrastructure Orchestration
 # ========================================
 
+# Get current AWS account ID
+data "aws_caller_identity" "current" {}
+
 # ========================================
 # Phase 1: VPC & Network Configuration
 # ========================================
@@ -134,3 +137,99 @@ module "rds" {
 
   depends_on = [module.vpc, module.security_group]
 }
+
+# ========================================
+# Phase 6: ElastiCache (Redis) Configuration
+# ========================================
+module "cache" {
+  source = "./modules/cache"
+
+  app_name              = var.project_name
+  environment           = var.environment
+  private_subnets      = module.vpc.private_app_subnets
+  redis_security_group_id = module.security_group.redis_security_group_id
+  redis_node_type      = "cache.t3.micro"
+  snapshot_retention_limit = 5
+  snapshot_window      = "03:00-05:00"
+  maintenance_window   = "sun:05:00-sun:06:00"
+  common_tags          = local.common_tags
+}
+
+# ========================================
+# Phase 7: SSL/TLS Certificates (ACM)
+# ========================================
+module "certificates" {
+  source = "./modules/certificates"
+
+  app_name                  = var.project_name
+  environment               = var.environment
+  domain_name              = var.domain_name
+  route53_zone_id          = var.route53_zone_id
+  common_tags              = local.common_tags
+
+  depends_on = [module.vpc]
+}
+
+# ========================================
+# Phase 8: Email Service (SES)
+# ========================================
+module "email" {
+  source = "./modules/email"
+
+  app_name                     = var.project_name
+  environment                  = var.environment
+  domain_name                  = var.domain_name
+  route53_zone_id              = var.route53_zone_id
+  test_email_addresses         = var.test_email_addresses
+  test_email_domains           = var.test_email_domains
+  test_domain_route53_zone_id  = var.test_domain_route53_zone_id
+  common_tags                  = local.common_tags
+}
+
+# ========================================
+# Phase 9: Message Queue (SQS)
+# ========================================
+module "messaging" {
+  source = "./modules/messaging"
+
+  app_name           = var.project_name
+  environment        = var.environment
+  queue_names        = var.sqs_queue_names
+  sqs_kms_key_arn    = var.sqs_kms_key_arn
+  common_tags        = local.common_tags
+}
+
+# ========================================
+# Phase 10: Storage (S3)
+# ========================================
+module "storage" {
+  source = "./modules/storage"
+
+  app_name                   = var.project_name
+  environment                = var.environment
+  domain_name                = var.domain_name
+  aws_region                 = var.aws_region
+  certificate_arn            = module.certificates.certificate_arn
+  s3_filesystem_kms_key_arn  = module.security_group.s3_filesystem_kms_key_arn
+  caller_identity_account_id = data.aws_caller_identity.current.account_id
+  common_tags                = local.common_tags
+}
+
+# ========================================
+# Phase 11: Monitoring & Logging
+# ========================================
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  app_name                     = var.project_name
+  environment                  = var.environment
+  aws_region                   = var.aws_region
+  domain_name                  = var.domain_name
+  caller_identity_account_id   = data.aws_caller_identity.current.account_id
+  cloudwatch_logs_kms_key_id   = var.cloudwatch_logs_kms_key_id
+  cloudtrail_bucket_name       = var.cloudtrail_bucket_name
+  common_tags                  = local.common_tags
+
+  depends_on = [module.ecs, module.rds, module.alb]
+}
+

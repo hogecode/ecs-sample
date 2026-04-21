@@ -357,6 +357,88 @@ variable "enable_logs_bucket" {
   default     = true
 }
 
+variable "s3_filesystem_kms_key_arn" {
+  description = "ARN of KMS key for S3 filesystem encryption (optional)"
+  type        = string
+  default     = ""
+}
+
+# ========================================
+# Domain & Route53 Configuration
+# ========================================
+
+variable "domain_name" {
+  description = "Primary domain name for the application (e.g., example.com)"
+  type        = string
+  default     = ""
+}
+
+variable "route53_zone_id" {
+  description = "Route53 Hosted Zone ID for DNS management"
+  type        = string
+  default     = ""
+}
+
+# ========================================
+# Email Service Configuration (SES)
+# ========================================
+
+variable "test_email_addresses" {
+  description = "List of test email addresses for SES sandbox mode"
+  type        = list(string)
+  default     = []
+}
+
+variable "test_email_domains" {
+  description = "List of test email domains for SES sandbox mode"
+  type        = list(string)
+  default     = []
+}
+
+variable "test_domain_route53_zone_id" {
+  description = "Route53 Zone ID for test email domain verification"
+  type        = string
+  default     = ""
+}
+
+# ========================================
+# Messaging Configuration (SQS)
+# ========================================
+
+variable "sqs_queue_names" {
+  description = "List of SQS queue names to create"
+  type        = list(string)
+  default     = ["default", "email", "notifications"]
+}
+
+variable "sqs_kms_key_arn" {
+  description = "ARN of KMS key for SQS encryption (optional)"
+  type        = string
+  default     = ""
+}
+
+# ========================================
+# Monitoring & Logging Configuration
+# ========================================
+
+variable "cloudwatch_logs_kms_key_id" {
+  description = "KMS key ID for CloudWatch Logs encryption (optional)"
+  type        = string
+  default     = ""
+}
+
+variable "cloudtrail_bucket_name" {
+  description = "S3 bucket name for CloudTrail logs (optional)"
+  type        = string
+  default     = ""
+}
+
+variable "enable_cloudtrail" {
+  description = "Enable CloudTrail for audit logging"
+  type        = bool
+  default     = false
+}
+
 # ========================================
 # Resource Tagging
 # ========================================
