@@ -1,136 +1,215 @@
 # Terraform AWS Modules
 
-このディレクトリには、terraform-aws-modules公式モジュールを使用したAWSインフラストラクチャのモジュール化構成が含まれています。
+このディレクトリには、AWS インフラストラクチャを AWS サービス機能別に整理したモジュール化構成が含まれています。
+
+## ディレクトリ構造
+
+```
+modules/
+├── compute/              # ECS、コンテナ関連
+│   ├── ecs/
+│   ├── ecr/
+│   └── autoscaling/
+├── lambda/               # Lambda 関数
+│   └── lambda/
+├── network/              # ネットワーク・ロードバランサー・セキュリティ
+│   ├── vpc/
+│   ├── alb/
+│   └── security_group/
+├── cdn/                  # CDN・DNS・SSL 関連
+│   ├── cloudfront/
+│   ├── dns/
+│   └── certificates/
+├── database/             # データベース・キャッシュ
+│   ├── rds/
+│   └── cache/
+├── secrets/              # シークレット管理
+│   └── secrets-manager/
+├── messaging/            # メッセージング・通信
+│   ├── messaging/        (SQS)
+│   └── email/
+├── storage/              # ストレージ
+│   └── storage/          (S3)
+├── monitoring/           # モニタリング・ロギング
+│   └── cloudwatch/
+└── cicd/                 # CI/CD パイプライン
+    └── cicd/
+```
 
 ## モジュール一覧
 
-### 1. ALB Module (`alb/`)
-**基盤**: terraform-aws-alb v9.0
-- Application Load Balancer（ALB）の管理
-- パブリックALB（フロントエンド向け）
-- プライベートALB（バックエンド向け）
-- ターゲットグループとリスナーの設定
-- HTTPS/HTTP リダイレクション機能
-- パブリック/プライベートLBの統一管理
+### Compute Category
 
-**主要な入力**:
-- `project_name`: プロジェクト名
-- `environment`: 環境名
-- `vpc_id`: VPC ID
-- `public_subnet_ids`: パブリックサブネット
-- `private_api_subnet_ids`: プライベートサブネット
+#### 1. ECS Module (`compute/ecs/`)
+- Elastic Container Service（ECS）クラスタの管理
+- Fargate/EC2 の両方に対応
+- Container Insights 統合
+- CloudWatch ログ統合
 
-### 2. ECR Module (`ecr/`)
-**基盤**: terraform-aws-ecr
+#### 2. ECR Module (`compute/ecr/`)
 - Elastic Container Registry（ECR）リポジトリの管理
 - イメージスキャン設定
 - ライフサイクルポリシーの自動化
 
-**主要な入力**:
-- `ecr_nextjs_repository_name`: Next.jsリポジトリ名
-- `ecr_go_server_repository_name`: Goサーバーリポジトリ名
-- `ecr_image_scan_on_push`: プッシュ時にスキャン
-- `ecr_image_tag_mutability`: タグの変更不可設定
+#### 3. Auto Scaling Module (`compute/autoscaling/`)
+- Auto Scaling グループ管理
+- スケーリングポリシー
+- CloudWatch アラーム統合
 
-### 3. CloudWatch Module (`cloudwatch/`)
-**基盤**: terraform-aws-cloudwatch
-- CloudWatch ロググループの管理
-- CloudWatch メトリクスアラーム
-- SNS トピックの管理
-- CloudTrail ログの管理（オプション）
+### Lambda Category
 
-**主要な入力**:
-- `app_name`: アプリケーション名
-- `environment`: 環境名
-- `logs_retention_days`: ログ保持期間
-- `cloudwatch_logs_kms_key_id`: KMS キー ID
-
-### 4. Route53 Module (`route53/`)
-**基盤**: terraform-aws-route53
-- Route53 DNS レコード管理
-- A レコード、ワイルドカードレコード対応
-- ヘルスチェック管理
-
-**主要な入力**:
-- `route53_zone_id`: Route53 ゾーン ID
-- `domain_name`: ドメイン名
-- `alb_dns_name`: ALB DNS 名
-- `alb_zone_id`: ALB ゾーン ID
-
-### 5. Secrets Manager Module (`secrets-manager/`)
-**基盤**: terraform-aws-secrets-manager
-- AWS Secrets Manager でのシークレット管理
-- 暗号化されたシークレット保存
-- 複数のシークレット構成対応
-
-**主要な入力**:
-- `app_name`: アプリケーション名
-- `environment`: 環境名
-- `app_key`: アプリケーションキー
-- `rds_endpoint`: RDS エンドポイント
-- `secrets_kms_key_id`: KMS キー ID
-
-### 6. Lambda Module (`lambda/`)
-**基盤**: terraform-aws-lambda
+#### Lambda Module (`lambda/lambda/`)
 - AWS Lambda 関数の管理
 - VPC 統合
 - IAM ロール・ポリシーの自動管理
 - EventBridge トリガー対応
 
-**主要な入力**:
-- `lambda_function_name`: 関数名
-- `lambda_handler`: ハンドラー（例：index.handler）
-- `lambda_runtime`: ランタイム（例：python3.11）
-- `lambda_source_path`: ソースコードパス
-- `vpc_subnet_ids`: VPC サブネット ID
+### Network Category
 
-### 7. CloudFront Module (`cloudfront/`)
-**基盤**: terraform-aws-cloudfront
+#### 1. VPC Module (`network/vpc/`)
+- VPC の管理
+- サブネット（パブリック、プライベート）の設定
+- NAT Gateway の設定
+- VPC Flow Logs
+
+#### 2. ALB Module (`network/alb/`)
+- Application Load Balancer（ALB）の管理
+- パブリックALB（フロントエンド向け）
+- プライベートALB（バックエンド向け）
+- ターゲットグループとリスナーの設定
+- HTTPS/HTTP リダイレクション機能
+
+#### 3. Security Group Module (`network/security_group/`)
+- セキュリティグループの管理
+- インバウンド・アウトバウンドルールの設定
+- VPC エンドポイント用セキュリティグループ
+
+### CDN Category
+
+#### 1. CloudFront Module (`cdn/cloudfront/`)
 - CloudFront ディストリビューション管理
 - S3 オリジン設定
 - キャッシュ動作設定
 - SSL/TLS 設定
 
-**主要な入力**:
-- `s3_bucket_domain_name`: S3 バケットドメイン名
-- `origin_id`: オリジン ID
-- `acm_certificate_arn`: ACM 証明書 ARN
-- `price_class`: 価格クラス
+#### 2. Route53/DNS Module (`cdn/dns/`)
+- Route53 DNS レコード管理
+- A レコード、ワイルドカードレコード対応
+- ヘルスチェック管理
 
-### 8. Auto Scaling Module (`autoscaling/`)
-**基盤**: terraform-aws-autoscaling
-- Auto Scaling グループ管理
-- スケーリングポリシー
-- CloudWatch アラーム統合
+#### 3. Certificates Module (`cdn/certificates/`)
+- AWS Certificate Manager（ACM）の証明書管理
+- DNS 検証の自動化
 
-**主要な入力**:
-- `autoscaling_group_name`: ASG 名
-- `min_size`: 最小サイズ
-- `max_size`: 最大サイズ
-- `desired_capacity`: 希望容量
-- `launch_template_name`: 起動テンプレート名
+### Database Category
+
+#### 1. RDS Module (`database/rds/`)
+- Relational Database Service（RDS）インスタンス管理
+- マルチ AZ 設定
+- バックアップ・リカバリ設定
+- パラメータグループ管理
+- 拡張モニタリング
+
+#### 2. ElastiCache Module (`database/cache/`)
+- ElastiCache（Redis）クラスタの管理
+- スナップショット設定
+- メンテナンスウィンドウの設定
+
+### Secrets Category
+
+#### Secrets Manager Module (`secrets/secrets-manager/`)
+- AWS Secrets Manager でのシークレット管理
+- 暗号化されたシークレット保存
+- 複数のシークレット構成対応
+
+### Messaging Category
+
+#### 1. SQS Module (`messaging/messaging/`)
+- Simple Queue Service（SQS）の管理
+- 標準キュー・FIFO キー対応
+- KMS 暗号化設定
+- デッドレターキュー設定
+
+#### 2. SES Module (`messaging/email/`)
+- Simple Email Service（SES）の管理
+- ドメイン検証
+- DKIM 設定
+
+### Storage Category
+
+#### S3 Module (`storage/storage/`)
+- Simple Storage Service（S3）バケットの管理
+- バージョニング設定
+- ライフサイクルポリシー
+- CloudFront 統合
+- KMS 暗号化設定
+
+### Monitoring Category
+
+#### CloudWatch Module (`monitoring/cloudwatch/`)
+- CloudWatch ロググループの管理
+- CloudWatch メトリクスアラーム
+- SNS トピックの管理
+- CloudTrail ログの管理（オプション）
+- ダッシュボード作成
+
+### CI/CD Category
+
+#### CI/CD Module (`cicd/cicd/`)
+- GitHub との統合
+- CodeBuild の設定
+- CodeDeploy の設定
+- CodePipeline の管理
+- アーティファクト保存
 
 ## 使用方法
 
 ### モジュールの呼び出し例
 
 ```hcl
-module "alb" {
-  source = "./modules/alb"
+# ネットワーク関連
+module "vpc" {
+  source = "./modules/network/vpc"
   
-  project_name           = var.project_name
-  environment            = var.environment
-  vpc_id                 = module.vpc.vpc_id
-  public_subnet_ids      = module.vpc.public_subnets
-  alb_public_security_group_id = module.security_group.alb_public_security_group_id
+  project_name      = var.project_name
+  environment       = var.environment
+  vpc_cidr          = var.vpc_cidr
+  availability_zones = var.availability_zones
 }
 
-module "ecr" {
-  source = "./modules/ecr"
+# コンピュート関連
+module "ecs" {
+  source = "./modules/compute/ecs"
   
-  ecr_nextjs_repository_name    = var.ecr_nextjs_repository_name
-  ecr_go_server_repository_name = var.ecr_go_server_repository_name
-  ecr_image_scan_on_push        = var.ecr_image_scan_on_push
+  project_name        = var.project_name
+  environment         = var.environment
+  enable_container_insights = true
+}
+
+# データベース関連
+module "rds" {
+  source = "./modules/database/rds"
+  
+  project_name    = var.project_name
+  environment     = var.environment
+  rds_engine      = var.rds_engine
+  rds_engine_version = var.rds_engine_version
+}
+
+# CDN 関連
+module "cloudfront" {
+  source = "./modules/cdn/cloudfront"
+  
+  project_name = var.project_name
+  environment  = var.environment
+}
+
+# ストレージ関連
+module "storage" {
+  source = "./modules/storage/storage"
+  
+  app_name    = var.project_name
+  environment = var.environment
 }
 ```
 
@@ -143,34 +222,30 @@ module "ecr" {
 各モジュールは以下の形式で出力値を提供します：
 
 ```hcl
-output "module_alb_dns_name" {
-  value = module.alb.public_alb_dns_name
+output "vpc_id" {
+  value = module.vpc.vpc_id
 }
 
-output "module_ecr_nextjs_url" {
-  value = module.ecr.nextjs_repository_url
+output "ecs_cluster_name" {
+  value = module.ecs.cluster_name
+}
+
+output "rds_endpoint" {
+  value = module.rds.rds_endpoint
+}
+
+output "s3_bucket_name" {
+  value = module.storage.bucket_name
 }
 ```
 
-## バージョン情報
-
-| モジュール | バージョン |
-|-----------|-----------|
-| terraform-aws-alb | ~> 9.0 |
-| terraform-aws-ecr | ~> 1.0 |
-| terraform-aws-cloudwatch | ~> 5.0 |
-| terraform-aws-route53 | ~> 2.0 |
-| terraform-aws-secrets-manager | ~> 1.0 |
-| terraform-aws-lambda | ~> 6.0 |
-| terraform-aws-cloudfront | ~> 3.0 |
-| terraform-aws-autoscaling | ~> 7.0 |
-
 ## セキュリティのベストプラクティス
 
-1. **KMS 暗号化**: Secrets Manager と CloudWatch ログは KMS キーで暗号化します
-2. **IAM ロール**: Lambda と EC2 に最小権限のロールを付与します
+1. **KMS 暗号化**: Secrets Manager、S3、RDS、CloudWatch ログは KMS キーで暗号化します
+2. **IAM ロール**: ECS、Lambda に最小権限のロールを付与します
 3. **セキュリティグループ**: ALB とリソース間の通信を制限します
 4. **VPC**: Lambda と RDS を VPC 内に配置します
+5. **VPC エンドポイント**: 外部通信を最小化するため VPC エンドポイントを利用します
 
 ## トラブルシューティング
 
@@ -179,18 +254,13 @@ output "module_ecr_nextjs_url" {
 terraform init -upgrade
 ```
 
-### 属性エラー
-モジュールのドキュメントを確認し、正しい属性名を使用してください：
-- terraform-aws-modules/alb/aws: `public_alb` など
-- terraform-aws-modules/ecr/aws: `nextjs_ecr` など
+### パス関連エラー
+モジュール参照パスが新しい構造に対応しているか確認してください：
+- 旧: `source = "./modules/ecs"`
+- 新: `source = "./modules/compute/ecs"`
 
-## 参考リンク
+## 関連ドキュメント
 
-- [terraform-aws-modules/alb/aws](https://github.com/terraform-aws-modules/terraform-aws-alb)
-- [terraform-aws-modules/ecr/aws](https://github.com/terraform-aws-modules/terraform-aws-ecr)
-- [terraform-aws-modules/cloudwatch/aws](https://github.com/terraform-aws-modules/terraform-aws-cloudwatch)
-- [terraform-aws-modules/route53/aws](https://github.com/terraform-aws-modules/terraform-aws-route53)
-- [terraform-aws-modules/secrets-manager/aws](https://github.com/terraform-aws-modules/terraform-aws-secrets-manager)
-- [terraform-aws-modules/lambda/aws](https://github.com/terraform-aws-modules/terraform-aws-lambda)
-- [terraform-aws-modules/cloudfront/aws](https://github.com/terraform-aws-modules/terraform-aws-cloudfront)
-- [terraform-aws-modules/autoscaling/aws](https://github.com/terraform-aws-modules/terraform-aws-autoscaling)
+- [terraform/README.md](../README.md) - Terraform プロジェクト全体の構成
+- [IMPLEMENTATION_SUMMARY.md](../IMPLEMENTATION_SUMMARY.md) - 実装概要
+- [../docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) - アーキテクチャドキュメント

@@ -17,53 +17,41 @@ module "public_alb" {
   enable_http2               = true
   enable_cross_zone_load_balancing = true
 
-  # HTTP listener
-  http_tcp_listeners = [
+  # Listeners configuration
+  listeners = merge(
     {
-      port        = 80
-      protocol    = "HTTP"
-      action_type = "forward"
-      target_group_index = 0
-    }
-  ]
-
-  # HTTPS listener (conditional)
-  https_listeners = var.enable_https ? [
-    {
-      port            = 443
-      protocol        = "HTTPS"
-      certificate_arn = var.alb_certificate_arn
-      action_type     = "forward"
-      target_group_index = 0
-    }
-  ] : []
-
-  # Redirect HTTP to HTTPS (conditional)
-  http_tcp_listeners_rules = var.enable_https ? [
-    {
-      listener_index = 0
-      priority       = 1
-      actions = [
-        {
-          type = "redirect"
-          redirect = {
-            port        = "443"
-            protocol    = "HTTPS"
-            status_code = "HTTP_301"
-          }
+      http = {
+        port        = 80
+        protocol    = "HTTP"
+        forward = {
+          target_group_key = "nextjs"
         }
-      ]
-      conditions = [
-        {
-          path_pattern = ["/*"]
+      }
+    },
+    var.enable_https ? {
+      https = {
+        port            = 443
+        protocol        = "HTTPS"
+        certificate_arn = var.alb_certificate_arn
+        forward = {
+          target_group_key = "nextjs"
         }
-      ]
-    }
-  ] : []
+      }
+      http-to-https = {
+        port     = 80
+        protocol = "HTTP"
+        redirect = {
+          port        = "443"
+          protocol    = "HTTPS"
+          status_code = "HTTP_301"
+        }
+      }
+    } : {}
+  )
 
-  # Target group for Next.js
-  target_groups = [
-    {
+  # Target groups for Next.js
+  target_groups = {
+    nextjs = {
       name            = "${var.project_name}-nextjs-tg-${var.environment}"
       backend_protocol = "HTTP"
       backend_port    = 3000
@@ -87,7 +75,7 @@ module "public_alb" {
         Name = "${var.project_name}-nextjs-tg-${var.environment}"
       }
     }
-  ]
+  }
 
   tags = {
     Name = "${var.project_name}-public-alb-${var.environment}"
@@ -109,19 +97,20 @@ module "private_alb" {
   enable_http2               = true
   enable_cross_zone_load_balancing = true
 
-  # HTTP listener for internal service
-  http_tcp_listeners = [
-    {
+  # Listeners configuration for internal service
+  listeners = {
+    http = {
       port        = 8080
       protocol    = "HTTP"
-      action_type = "forward"
-      target_group_index = 0
+      forward = {
+        target_group_key = "go-server"
+      }
     }
-  ]
+  }
 
-  # Target group for Go Server
-  target_groups = [
-    {
+  # Target groups for Go Server
+  target_groups = {
+    go-server = {
       name            = "${var.project_name}-go-server-tg-${var.environment}"
       backend_protocol = "HTTP"
       backend_port    = 8080
@@ -145,7 +134,7 @@ module "private_alb" {
         Name = "${var.project_name}-go-server-tg-${var.environment}"
       }
     }
-  ]
+  }
 
   tags = {
     Name = "${var.project_name}-private-alb-${var.environment}"

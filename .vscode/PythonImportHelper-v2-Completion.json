@@ -239,5 +239,14 @@
         "peekOfCode": "graph_attr = {\n    \"fontsize\": \"16\",\n    \"bgcolor\": \"white\",\n    \"pad\": \"0.5\",\n}\nwith Diagram(\n    \"Infrastructure - Production\",\n    filename=\"infrastructure\",\n    show=False,\n    direction=\"TB\",",
         "detail": "diagrams.infrastructure_diagram",
         "documentation": {}
+    },
+    {
+        "label": "lambda_handler",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.rds.rds.examples.role-association-postgres.fixtures.lambda_function",
+        "description": "terraform..terraform.modules.rds.rds.examples.role-association-postgres.fixtures.lambda_function",
+        "peekOfCode": "def lambda_handler(event, context):\n    return \"Triggered by RDS Lambda!\"",
+        "detail": "terraform..terraform.modules.rds.rds.examples.role-association-postgres.fixtures.lambda_function",
+        "documentation": {}
     }
 ]

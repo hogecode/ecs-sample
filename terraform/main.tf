@@ -9,7 +9,7 @@ data "aws_caller_identity" "current" {}
 # Phase 1: VPC & Network Configuration
 # ========================================
 module "vpc" {
-  source = "./modules/vpc"
+  source = "./modules/network/vpc"
 
   # Basic configuration
   project_name              = var.project_name
@@ -43,7 +43,7 @@ module "vpc" {
 # Phase 2: Security Groups Configuration
 # ========================================
 module "security_group" {
-  source = "./modules/security_group"
+  source = "./modules/network/security_group"
 
   # Basic configuration
   project_name = var.project_name
@@ -56,7 +56,7 @@ module "security_group" {
 # Phase 3: Application Load Balancer Configuration
 # ========================================
 module "alb" {
-  source = "./modules/alb"
+  source = "./modules/network/alb"
 
   project_name                    = var.project_name
   environment                     = var.environment
@@ -81,7 +81,7 @@ module "alb" {
 # Phase 4: ECS Configuration
 # ========================================
 module "ecs" {
-  source = "./modules/ecs"
+  source = "./modules/compute/ecs"
 
   project_name              = var.project_name
   environment               = var.environment
@@ -109,7 +109,7 @@ module "ecs" {
 # Phase 5: RDS Database Configuration
 # ========================================
 module "rds" {
-  source = "./modules/rds"
+  source = "./modules/database/rds"
 
   project_name              = var.project_name
   environment               = var.environment
@@ -142,7 +142,7 @@ module "rds" {
 # Phase 6: ElastiCache (Redis) Configuration
 # ========================================
 module "cache" {
-  source = "./modules/cache"
+  source = "./modules/database/cache"
 
   app_name              = var.project_name
   environment           = var.environment
@@ -159,7 +159,7 @@ module "cache" {
 # Phase 7: SSL/TLS Certificates (ACM)
 # ========================================
 module "certificates" {
-  source = "./modules/certificates"
+  source = "./modules/cdn/certificates"
 
   app_name                  = var.project_name
   environment               = var.environment
@@ -174,7 +174,7 @@ module "certificates" {
 # Phase 8: Email Service (SES)
 # ========================================
 module "email" {
-  source = "./modules/email"
+  source = "./modules/messaging/email"
 
   app_name                     = var.project_name
   environment                  = var.environment
@@ -190,7 +190,7 @@ module "email" {
 # Phase 9: Message Queue (SQS)
 # ========================================
 module "messaging" {
-  source = "./modules/messaging"
+  source = "./modules/messaging/messaging"
 
   app_name           = var.project_name
   environment        = var.environment
@@ -203,7 +203,7 @@ module "messaging" {
 # Phase 10: Storage (S3)
 # ========================================
 module "storage" {
-  source = "./modules/storage"
+  source = "./modules/storage/storage"
 
   app_name                   = var.project_name
   environment                = var.environment
@@ -219,13 +219,10 @@ module "storage" {
 # Phase 11: Monitoring & Logging
 # ========================================
 module "monitoring" {
-  source = "./modules/monitoring"
+  source = "./modules/monitoring/cloudwatch"
 
   app_name                     = var.project_name
   environment                  = var.environment
-  aws_region                   = var.aws_region
-  domain_name                  = var.domain_name
-  caller_identity_account_id   = data.aws_caller_identity.current.account_id
   cloudwatch_logs_kms_key_id   = var.cloudwatch_logs_kms_key_id
   cloudtrail_bucket_name       = var.cloudtrail_bucket_name
   common_tags                  = local.common_tags
@@ -237,7 +234,7 @@ module "monitoring" {
 # Phase 12: CI/CD Pipeline Configuration
 # ========================================
 module "cicd" {
-  source = "./modules/cicd"
+  source = "./modules/cicd/cicd"
 
   project_name             = var.project_name
   environment              = var.environment
