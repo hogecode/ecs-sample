@@ -1,5 +1,0 @@
-[31m╷[0m[0m
-[31m│[0m [0m[1m[31mError: [0m[0m[1mFailed to read variables file[0m
-[31m│[0m [0m
-[31m│[0m [0m[0mGiven variables file environments/dev.tfvars does not exist.
-[31m╵[0m[0m

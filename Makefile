@@ -22,11 +22,6 @@ ECS_SERVICES := nextjs-service go-server-service
 # Environments
 ENVIRONMENTS := dev staging prod
 
-# Environment-specific emojis
-EMOJI_dev :=
-EMOJI_staging :=
-EMOJI_prod :=
-
 # Load optional local config (overrides above variables)
 -include Makefile.config
 
@@ -70,8 +65,8 @@ terraform.init:
 terraform.graph:
 	@echo "Generating Terraform dependency graph..."
 ifeq ($(OS),Windows_NT)
-	@cmd /c "cd terraform & terraform graph > terraform-graph.dot & echo Dependency graph generated: terraform-graph.dot"
-	@cmd /c "if exist terraform\terraform-graph.dot (dot -Tpng terraform\terraform-graph.dot -o terraform\terraform-graph.png & echo Graph PNG also generated: terraform-graph.png) else (echo (requires Graphviz: https://graphviz.org/download/))"
+	@cmd /c "cd terraform && terraform graph > terraform-graph.dot && echo Dependency graph generated: terraform-graph.dot"
+	@cmd /c "if exist terraform\terraform-graph.dot dot -Tpng terraform\terraform-graph.dot -o terraform\terraform-graph.png && echo Graph PNG also generated: terraform-graph.png || echo (requires Graphviz: https://graphviz.org/download/)"
 else
 	@$(tf) graph > terraform-graph.dot
 	@echo "Dependency graph generated: terraform-graph.dot"
@@ -85,28 +80,22 @@ else
 	fi
 endif
 
-# Generic terraform plan target
-.PHONY: terraform.%.plan
-terraform.%.plan:
-	@echo "Running Terraform plan for $(call emoji,$*) $* environment..."
-	@$(tf) workspace select $* 2>/dev/null || $(tf) workspace new $*
-	@$(tf) plan -var-file="environments/$*.tfvars"
 
 # Terraform plan with explicit .tfvars target
 .PHONY: tf.plan.dev
 tf.plan.dev:
-	@echo "Running Terraform plan for $(call emoji,dev) dev environment..."
+	@echo "Running Terraform plan for dev environment..."
 	@cd $(TF_DIR) ; terraform plan -var-file="environments/dev.tfvars"
 
 .PHONY: tf.plan.staging
 tf.plan.staging:
-	@echo "Running Terraform plan for $(call emoji,staging) staging environment..."
-	@terraform -chdir=$(TF_DIR) plan -var-file="environments/staging.tfvars"
+	@echo "Running Terraform plan for staging environment..."
+	@cd $(TF_DIR) ; terraform plan -var-file="environments/staging.tfvars"  -out=tfplan
 
 .PHONY: tf.plan.prod
 tf.plan.prod:
-	@echo "Running Terraform plan for $(call emoji,prod) prod environment..."
-	@terraform -chdir=$(TF_DIR) plan -var-file="environments/prod.tfvars"
+	@echo "Running Terraform plan for prod environment..."
+	@cd $(TF_DIR) ;terraform plan -var-file="environments/prod.tfvars" -out=tfplan	
 
 # Generic terraform apply target
 .PHONY: terraform.%.apply
@@ -136,17 +125,16 @@ docker.%.build:
 # Generic docker push target with ECS redeployment
 .PHONY: docker.%.push
 docker.%.push: aws.login
-	@set -e; \
-	ECR=$$($(tf) output -raw ecr_repository_url); \
+	@ECR=$$($(tf) output -raw ecr_repository_url) && \
 	if [ -z "$$ECR" ]; then \
 		echo "ERROR: terraform output 'ecr_repository_url' is empty"; \
 		exit 1; \
-	fi; \
-	echo "Tagging image as $$ECR:latest"; \
-	docker tag $(APP_NAME)-$*:latest $$ECR:latest; \
-	echo "Pushing image to $$ECR:latest"; \
-	docker push $$ECR:latest; \
-	$(MAKE) aws.$*.redeploy.quiet; \
+	fi && \
+	echo "Tagging image as $$ECR:latest" && \
+	docker tag $(APP_NAME)-$*:latest $$ECR:latest && \
+	echo "Pushing image to $$ECR:latest" && \
+	docker push $$ECR:latest && \
+	$(MAKE) aws.$*.redeploy.quiet && \
 	echo "Push completed successfully!"
 
 # ========================================
@@ -169,7 +157,7 @@ aws.%.redeploy:
 			--service $(call service,$*,$(svc)) \
 			--force-new-deployment \
 			--query "service.deployments[0].status" \
-			--output text; \
+			--output text && \
 	) true
 	@echo "Waiting for all deployments to stabilize..."
 	@$(aws) ecs wait services-stable \
@@ -181,31 +169,30 @@ aws.%.redeploy:
 .PHONY: aws.%.redeploy.quiet
 aws.%.redeploy.quiet:
 	@$(foreach svc,$(ECS_SERVICES), \
-		echo "Triggering ECS deployment for $(svc)"; \
+		echo "Triggering ECS deployment for $(svc)" && \
 		$(aws) ecs update-service \
 			--cluster $(call cluster,$*) \
 			--service $(call service,$*,$(svc)) \
 			--force-new-deployment \
 			--query "service.deployments[0].status" \
-			--output text; \
+			--output text && \
 	) true
 
 # Generic ECS SSH target
 .PHONY: aws.%.ssh
 aws.%.ssh:
 	@echo "Connecting to $* container..."
-	@set -e; \
-	TASK_ID=$$($(aws) ecs list-tasks \
+	@TASK_ID=$$($(aws) ecs list-tasks \
 		--cluster $(call cluster,$*) \
 		--service $(call service,$*,service) \
 		--desired-status RUNNING \
 		--query "taskArns[0]" \
-		--output text | cut -d'/' -f3); \
+		--output text | cut -d'/' -f3) && \
 	if [ -z "$$TASK_ID" ] || [ "$$TASK_ID" = "None" ]; then \
 		echo "ERROR: No running tasks found for $(call service,$*,service)"; \
 		exit 1; \
-	fi; \
-	echo "Connecting to task: $$TASK_ID"; \
+	fi && \
+	echo "Connecting to task: $$TASK_ID" && \
 	( trap 'kill 0' INT TERM; \
 	  $(aws) ecs execute-command \
 	    --cluster $(call cluster,$*) \
@@ -223,10 +210,10 @@ aws.%.ssh:
 .PHONY: git.%.deploy
 git.%.deploy:
 	@echo "Deploying latest code to $(call emoji,$*) $*..."
-	-@git branch -D $*
-	@git checkout -b $*
-	@git push -f origin $*
-	@git checkout main
+	@(git branch -D $* || true) && \
+	git checkout -b $* && \
+	git push -f origin $* && \
+	git checkout main
 
 # ========================================
 # Convenience Targets
