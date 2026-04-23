@@ -91,7 +91,7 @@ inframap.generate:
 .PHONY: tf.plan.dev
 tf.plan.dev:
 	@echo "Running Terraform plan for dev environment..."
-	@cd $(TF_DIR) ; terraform plan -var-file="environments/dev.tfvars"
+	@cd $(TF_DIR) ; terraform plan -var-file="environments/dev.tfvars" -out=tfplan
 
 .PHONY: tf.plan.staging
 tf.plan.staging:
@@ -103,19 +103,19 @@ tf.plan.prod:
 	@echo "Running Terraform plan for prod environment..."
 	@cd $(TF_DIR) ;terraform plan -var-file="environments/prod.tfvars" -out=tfplan	
 
-# Generic terraform apply target
-.PHONY: terraform.%.apply
-terraform.%.apply:
-	@echo "Applying Terraform changes for $(call emoji,$*) $* environment..."
-	@$(tf) workspace select $* 2>/dev/null || $(tf) workspace new $*
-	@$(tf) apply -auto-approve -var-file="environments/$*.tfvars"
+
 
 # Production/prod requires explicit confirmation (no auto-approve)
-.PHONY: terraform.prod.apply
-terraform.prod.apply:
-	@echo "Applying Terraform changes for $(call emoji,prod) prod environment..."
-	@$(tf) workspace select prod 2>/dev/null || $(tf) workspace new prod
-	@$(tf) apply -var-file="environments/prod.tfvars"
+.PHONY: tf.apply.dev
+tf.apply.dev:
+	@echo "Applying Terraform changes for dev environment..."
+	@$(tf) apply tfplan
+
+.PHONY: tf.destroy.dev
+tf.destroy.dev:
+	@echo "Destroying Terraform resources for dev environment..."
+	@$(tf) destroy -var-file=environments/dev.tfvars -auto-approve
+
 
 # ========================================
 # Docker Targets

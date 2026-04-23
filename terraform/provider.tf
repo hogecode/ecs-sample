@@ -5,10 +5,7 @@ provider "aws" {
 
   default_tags {
     tags = merge(
-      local.common_tags,
-      {
-        CreatedAt = timestamp()
-      }
+      local.common_tags
     )
   }
 }
