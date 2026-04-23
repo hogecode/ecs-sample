@@ -2,6 +2,9 @@
 # Route53 Module - Using terraform-aws-route53 module
 # ========================================
 
+# TODO: ゾーンIDを取得できないか
+# TODO: AWS内部ドメインのCNAMEレコードも必要かどうか確認する
+# ドメインはCloudflareとかで買う必要があるので面倒
 module "route53_records" {
   source  = "terraform-aws-modules/route53/aws//modules/records"
   version = "~> 2.0"

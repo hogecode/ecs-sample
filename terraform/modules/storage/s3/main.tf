@@ -41,7 +41,7 @@ module "alb_logs" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::127311923021:root" # ELB service account for us-east-1
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
         }
         Action = "s3:PutObject"
         Resource = "${module.alb_logs.s3_bucket_arn}/alb/AWSLogs/${var.caller_identity_account_id}/*"
@@ -49,7 +49,7 @@ module "alb_logs" {
       {
         Effect = "Allow"
         Principal = {
-          AWS = "arn:aws:iam::127311923021:root"
+          Service = "logdelivery.elasticloadbalancing.amazonaws.com"
         }
         Action   = "s3:GetBucketAcl"
         Resource = module.alb_logs.s3_bucket_arn

@@ -33,6 +33,7 @@ module "vpc" {
   tags = local.common_tags
 }
 
+
 # ========================================
 # Phase 2: Security Groups Configuration
 # ========================================
@@ -45,6 +46,7 @@ module "security_group" {
   vpc_id       = module.vpc.vpc_id
   vpc_cidr     = module.vpc.vpc_cidr
 }
+
 
 # ========================================
 # Phase 3: Application Load Balancer Configuration
@@ -62,6 +64,7 @@ module "alb" {
 
   # HTTPS configuration (optional)
   enable_https       = var.enable_https
+  # TODO: 現在は.tfvarsで直接ARNを渡しているが、ACMモジュールで作成した証明書のARNを渡すようにする
   alb_certificate_arn = var.alb_certificate_arn
 
   # Access logs (optional)
@@ -69,6 +72,19 @@ module "alb" {
   alb_access_logs_bucket = var.alb_access_logs_bucket
 
   depends_on = [module.security_group, module.vpc]
+}
+
+# ========================================
+# Phase 4: ECR Configuration
+# ========================================
+module "ecr" {
+  source = "./modules/compute/ecr"
+  
+  # ECR Configuration
+  ecr_nextjs_repository_name     = var.ecr_nextjs_repository_name
+  ecr_go_server_repository_name  = var.ecr_go_server_repository_name
+  ecr_image_scan_on_push         = var.ecr_image_scan_on_push
+  ecr_image_tag_mutability       = var.ecr_image_tag_mutability
 }
 
 # ========================================
@@ -84,6 +100,8 @@ module "ecs" {
   # ECR Configuration
   ecr_nextjs_repository_name     = var.ecr_nextjs_repository_name
   ecr_go_server_repository_name  = var.ecr_go_server_repository_name
+  ecr_nextjs_repository_url      = module.ecr.nextjs_repository_url
+  ecr_go_server_repository_url   = module.ecr.go_server_repository_url
   ecr_image_scan_on_push         = var.ecr_image_scan_on_push
   ecr_image_tag_mutability       = var.ecr_image_tag_mutability
 
@@ -96,7 +114,17 @@ module "ecs" {
   # Logging Configuration
   logs_retention_days = local.logs_retention_days
 
-  depends_on = [module.vpc, module.security_group]
+  # Network Configuration
+  private_app_subnet_ids    = module.vpc.private_app_subnets
+  private_api_subnet_ids    = module.vpc.private_api_subnets
+  nextjs_security_group_id  = module.security_group.nextjs_security_group_id
+  go_server_security_group_id = module.security_group.go_server_security_group_id
+
+  # Load Balancer Target Groups
+  nextjs_target_group_arn   = module.alb.nextjs_target_group_arn
+  go_server_target_group_arn = module.alb.go_server_target_group_arn
+
+  depends_on = [module.vpc, module.security_group, module.alb, module.ecr]
 }
 
 # ========================================
@@ -158,6 +186,9 @@ module "certificates" {
   app_name                  = var.project_name
   environment               = var.environment
   domain_name              = var.domain_name
+  # TODO: zone_idを渡すのではなく、Route53のゾーンを作成して、そのゾーンIDを渡すようにする
+  # data "aws_route53_zone" で取得するのが基本
+  # あるいはzone_id = aws_route53_zone.this.zone_id
   route53_zone_id          = var.route53_zone_id
   common_tags              = local.common_tags
 

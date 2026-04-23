@@ -12,6 +12,9 @@ module "cloudfront_distribution" {
   price_class         = var.price_class
 
   # Origin configuration
+  # TODO: オリジンをALBのドメイン名にする
+  # TODO: WAFをCloudfrontにつける
+  # TODO: viewer_certificateでACMの証明書を指定する
   origin = {
     s3_origin = {
       domain_name = var.s3_bucket_domain_name

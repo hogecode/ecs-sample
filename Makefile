@@ -23,7 +23,7 @@ ECS_SERVICES := nextjs-service go-server-service
 ENVIRONMENTS := dev staging prod
 
 # Load optional local config (overrides above variables)
--include Makefile.config
+# -include Makefile.config
 
 # ========================================
 # Helper Functions
@@ -104,7 +104,6 @@ tf.plan.prod:
 	@cd $(TF_DIR) ;terraform plan -var-file="environments/prod.tfvars" -out=tfplan	
 
 
-
 # Production/prod requires explicit confirmation (no auto-approve)
 .PHONY: tf.apply.dev
 tf.apply.dev:
@@ -115,7 +114,6 @@ tf.apply.dev:
 tf.destroy.dev:
 	@echo "Destroying Terraform resources for dev environment..."
 	@$(tf) destroy -var-file=environments/dev.tfvars -auto-approve
-
 
 # ========================================
 # Docker Targets

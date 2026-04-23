@@ -1,102 +1,10 @@
 # ECS Module - Using terraform-aws-modules
 
 # ========================================
-# ECR Repositories
+# ECR Repositories are managed in terraform/modules/compute/ecr/
 # ========================================
-
-resource "aws_ecr_repository" "nextjs" {
-  name                 = var.ecr_nextjs_repository_name
-  image_tag_mutability = var.ecr_image_tag_mutability
-
-  image_scanning_configuration {
-    scan_on_push = var.ecr_image_scan_on_push
-  }
-
-  tags = {
-    Name = var.ecr_nextjs_repository_name
-  }
-}
-
-resource "aws_ecr_lifecycle_policy" "nextjs" {
-  repository = aws_ecr_repository.nextjs.name
-  policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1
-        description  = "Keep last 10 tagged images"
-        selection = {
-          tagStatus     = "tagged"
-          tagPrefixList = ["v"]
-          countType     = "imageCountMoreThan"
-          countNumber   = 10
-        }
-        action = {
-          type = "expire"
-        }
-      },
-      {
-        rulePriority = 2
-        description  = "Remove untagged images after 7 days"
-        selection = {
-          tagStatus   = "untagged"
-          countType   = "sinceImagePushed"
-          countUnit   = "days"
-          countNumber = 7
-        }
-        action = {
-          type = "expire"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_ecr_repository" "go_server" {
-  name                 = var.ecr_go_server_repository_name
-  image_tag_mutability = var.ecr_image_tag_mutability
-
-  image_scanning_configuration {
-    scan_on_push = var.ecr_image_scan_on_push
-  }
-
-  tags = {
-    Name = var.ecr_go_server_repository_name
-  }
-}
-
-resource "aws_ecr_lifecycle_policy" "go_server" {
-  repository = aws_ecr_repository.go_server.name
-  policy = jsonencode({
-    rules = [
-      {
-        rulePriority = 1
-        description  = "Keep last 10 tagged images"
-        selection = {
-          tagStatus     = "tagged"
-          tagPrefixList = ["v"]
-          countType     = "imageCountMoreThan"
-          countNumber   = 10
-        }
-        action = {
-          type = "expire"
-        }
-      },
-      {
-        rulePriority = 2
-        description  = "Remove untagged images after 7 days"
-        selection = {
-          tagStatus   = "untagged"
-          countType   = "sinceImagePushed"
-          countUnit   = "days"
-          countNumber = 7
-        }
-        action = {
-          type = "expire"
-        }
-      }
-    ]
-  })
-}
+# Note: ECR repositories are centrally managed in the ecr module
+# to avoid duplication and keep separation of concerns clear.
 
 # ========================================
 # CloudWatch Log Groups
@@ -131,7 +39,7 @@ resource "aws_cloudwatch_log_group" "xray" {
 # ========================================
 
 module "ecs_cluster" {
-  source = "terraform-aws-modules/ecs/aws"
+  source  = "terraform-aws-modules/ecs/aws"
   version = "~> 5.0"
 
   cluster_name = "${var.project_name}-cluster-${var.environment}"
@@ -184,23 +92,23 @@ resource "aws_iam_role_policy" "ecs_task_execution_custom" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["ecr:GetAuthorizationToken", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"]
+        Effect   = "Allow"
+        Action   = ["ecr:GetAuthorizationToken", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"]
         Resource = "*"
       },
       {
-        Effect = "Allow"
-        Action = ["logs:CreateLogStream", "logs:PutLogEvents"]
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogStream", "logs:PutLogEvents"]
         Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/ecs/*"
       },
       {
-        Effect = "Allow"
-        Action = ["secretsmanager:GetSecretValue"]
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
         Resource = "arn:aws:secretsmanager:${var.aws_region}:*:secret:${var.project_name}/*"
       },
       {
-        Effect = "Allow"
-        Action = ["kms:Decrypt"]
+        Effect   = "Allow"
+        Action   = ["kms:Decrypt"]
         Resource = "*"
       }
     ]
@@ -235,18 +143,18 @@ resource "aws_iam_role_policy" "ecs_task_role_nextjs" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["logs:PutLogEvents"]
+        Effect   = "Allow"
+        Action   = ["logs:PutLogEvents"]
         Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/ecs/${var.project_name}-nextjs-*"
       },
       {
-        Effect = "Allow"
-        Action = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
+        Effect   = "Allow"
+        Action   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
         Resource = "*"
       },
       {
-        Effect = "Allow"
-        Action = ["cloudwatch:PutMetricData"]
+        Effect   = "Allow"
+        Action   = ["cloudwatch:PutMetricData"]
         Resource = "*"
       }
     ]
@@ -281,30 +189,178 @@ resource "aws_iam_role_policy" "ecs_task_role_go_server" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
-        Action = ["logs:PutLogEvents"]
+        Effect   = "Allow"
+        Action   = ["logs:PutLogEvents"]
         Resource = "arn:aws:logs:${var.aws_region}:*:log-group:/ecs/${var.project_name}-go-server-*"
       },
       {
-        Effect = "Allow"
-        Action = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
+        Effect   = "Allow"
+        Action   = ["xray:PutTraceSegments", "xray:PutTelemetryRecords"]
         Resource = "*"
       },
       {
-        Effect = "Allow"
-        Action = ["secretsmanager:GetSecretValue"]
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue"]
         Resource = "arn:aws:secretsmanager:${var.aws_region}:*:secret:${var.project_name}/*"
       },
       {
-        Effect = "Allow"
-        Action = ["rds:DescribeDBInstances", "rds-db:connect"]
+        Effect   = "Allow"
+        Action   = ["rds:DescribeDBInstances", "rds-db:connect"]
         Resource = "*"
       },
       {
-        Effect = "Allow"
-        Action = ["cloudwatch:PutMetricData", "kms:Decrypt"]
+        Effect   = "Allow"
+        Action   = ["cloudwatch:PutMetricData", "kms:Decrypt"]
         Resource = "*"
       }
     ]
   })
+}
+
+# ========================================
+# ECS Task Definitions
+# ========================================
+
+# Next.js Task Definition
+resource "aws_ecs_task_definition" "nextjs" {
+  family                   = "${var.project_name}-nextjs"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = var.nextjs_task_cpu
+  memory                   = var.nextjs_task_memory
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role_nextjs.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "${var.project_name}-nextjs"
+      image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
+      essential = true
+      portMappings = [
+        {
+          containerPort = var.nextjs_container_port
+          hostPort      = var.nextjs_container_port
+          protocol      = "tcp"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.nextjs.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+      environment = var.nextjs_environment_variables
+      secrets     = var.nextjs_secrets
+    }
+  ])
+
+  tags = {
+    Name = "${var.project_name}-nextjs-task-${var.environment}"
+  }
+}
+
+# Go Server Task Definition
+resource "aws_ecs_task_definition" "go_server" {
+  family                   = "${var.project_name}-go-server"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = var.go_server_task_cpu
+  memory                   = var.go_server_task_memory
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role_go_server.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "${var.project_name}-go-server"
+      image     = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
+      essential = true
+      portMappings = [
+        {
+          containerPort = var.go_server_container_port
+          hostPort      = var.go_server_container_port
+          protocol      = "tcp"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.go_server.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+      environment = var.go_server_environment_variables
+      secrets     = var.go_server_secrets
+    }
+  ])
+
+  tags = {
+    Name = "${var.project_name}-go-server-task-${var.environment}"
+  }
+}
+
+# ========================================
+# ECS Services
+# ========================================
+
+# Next.js Service
+resource "aws_ecs_service" "nextjs" {
+  name            = "${var.project_name}-nextjs-service"
+  cluster         = module.ecs_cluster.cluster_id
+  task_definition = aws_ecs_task_definition.nextjs.arn
+  desired_count   = var.nextjs_desired_count
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_app_subnet_ids
+    security_groups  = [var.nextjs_security_group_id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = var.nextjs_target_group_arn
+    container_name   = "${var.project_name}-nextjs"
+    container_port   = var.nextjs_container_port
+  }
+
+  depends_on = [
+    aws_iam_role_policy.ecs_task_execution_custom,
+    aws_iam_role_policy.ecs_task_role_nextjs
+  ]
+
+  tags = {
+    Name = "${var.project_name}-nextjs-service-${var.environment}"
+  }
+}
+
+# Go Server Service
+resource "aws_ecs_service" "go_server" {
+  name            = "${var.project_name}-go-server-service"
+  cluster         = module.ecs_cluster.cluster_id
+  task_definition = aws_ecs_task_definition.go_server.arn
+  desired_count   = var.go_server_desired_count
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_api_subnet_ids
+    security_groups  = [var.go_server_security_group_id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = var.go_server_target_group_arn
+    container_name   = "${var.project_name}-go-server"
+    container_port   = var.go_server_container_port
+  }
+
+  depends_on = [
+    aws_iam_role_policy.ecs_task_execution_custom,
+    aws_iam_role_policy.ecs_task_role_go_server
+  ]
+
+  tags = {
+    Name = "${var.project_name}-go-server-service-${var.environment}"
+  }
 }

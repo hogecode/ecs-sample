@@ -4,6 +4,11 @@
 # RDS Instance using terraform-aws-modules
 # ========================================
 
+# TODO: DBPWを自動生成するためにrandom_passwordリソースを使用
+# resource "random_password" "rds_password"
+# Secrets Managerの generate_secret_string を使う
+# manage_master_user_password = true
+
 module "rds" {
   source = "terraform-aws-modules/rds/aws"
   version = "~> 6.0"
@@ -58,6 +63,7 @@ module "rds" {
   deletion_protection = var.environment == "prod" ? true : false
 
    # Parameter Group
+   # TODO: locals内でパラメータのリストを作成して、forループで変換する
    parameters = [
      for k, v in var.rds_parameters : {
        name  = k

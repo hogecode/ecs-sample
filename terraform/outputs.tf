@@ -1,5 +1,9 @@
 # Root Module Outputs
 
+# ========================================
+# Phase 1: VPC & Network Configuration
+# ========================================
+
 # VPC Outputs
 output "vpc_id" {
   description = "VPC ID"
@@ -55,7 +59,17 @@ output "vpc_endpoints" {
   value       = module.vpc.vpc_endpoints
 }
 
-# Security Groups
+# Availability Zones
+output "availability_zones" {
+  description = "Availability zones used"
+  value       = var.availability_zones
+}
+
+
+# ========================================
+# Phase 2: Security Groups Configuration
+# ========================================
+
 output "alb_public_security_group_id" {
   description = "Public ALB security group ID"
   value       = module.security_group.alb_public_security_group_id
@@ -86,13 +100,11 @@ output "bastion_security_group_id" {
   value       = module.security_group.bastion_security_group_id
 }
 
-# Availability Zones
-output "availability_zones" {
-  description = "Availability zones used"
-  value       = var.availability_zones
-}
 
-# ALB Outputs
+# ========================================
+# Phase 3: Application Load Balancer Configuration
+# ========================================
+
 output "public_alb_id" {
   description = "ID of the public ALB"
   value       = module.alb.public_alb_id
@@ -118,7 +130,11 @@ output "go_server_target_group_arn" {
   value       = module.alb.go_server_target_group_arn
 }
 
-# ECS Outputs
+
+# ========================================
+# Phase 4: ECS Configuration
+# ========================================
+
 output "ecs_cluster_id" {
   description = "ECS Cluster ID"
   value       = module.ecs.ecs_cluster_id
@@ -149,7 +165,11 @@ output "go_server_log_group_name" {
   value       = module.ecs.go_server_log_group_name
 }
 
-# RDS Outputs
+
+# ========================================
+# Phase 5: RDS Database Configuration
+# ========================================
+
 output "rds_instance_endpoint" {
   description = "RDS Instance endpoint (hostname:port)"
   value       = module.rds.rds_instance_endpoint
@@ -170,7 +190,11 @@ output "rds_instance_name" {
   value       = module.rds.rds_instance_name
 }
 
-# Environment Info
+
+# ========================================
+# Environment Information
+# ========================================
+
 output "environment" {
   description = "Environment name"
   value       = var.environment
