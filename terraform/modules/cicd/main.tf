@@ -340,7 +340,7 @@ resource "aws_codepipeline" "pipeline" {
     action {
       name             = "SourceAction"
       category         = "Source"
-      owner            = "GitHub"
+      owner            = "ThirdParty"
       provider         = "GitHub"
       version          = "1"
       output_artifacts = ["source_output"]

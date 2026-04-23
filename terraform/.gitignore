@@ -9,9 +9,10 @@
 crash.log
 crash.*.log
 
-# Exclude all .tfvars files except the template
+# Exclude all .tfvars files except the template and sample files
 *.tfvars
 *.tfvars.json
+!*.tfvars.sample
 !example.tfvars
 
 # Ignore override files, as they are usually used for temporary workspaces

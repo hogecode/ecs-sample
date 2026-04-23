@@ -6,7 +6,7 @@ module "elasticache" {
   source = "terraform-aws-modules/elasticache/aws"
   version = "~> 1.0"
 
-  cluster_id           = "${var.app_name}-${var.environment}-redis"
+  replication_group_id     = "${var.app_name}-${var.environment}-redis"
   engine               = "redis"
   engine_version       = "7.0"
   node_type            = var.redis_node_type
@@ -18,9 +18,12 @@ module "elasticache" {
 
   # Parameter group
   parameter_group_family = "redis7"
-  parameters = {
-    maxmemory-policy = "allkeys-lru"
-  }
+  parameters = [
+    {
+      name  = "maxmemory-policy"
+      value = "allkeys-lru"
+    }
+  ]
 
   # Subnet group
   subnet_ids = var.private_subnets

@@ -228,11 +228,11 @@ module "app_filesystem" {
     }
   ]
 
-  # Bucket policy for Macie and CloudFront
+  # Bucket policy for Macie
   attach_policy = true
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = concat([
+    Statement = [
       {
         Sid    = "AllowMacieToGetObjects"
         Effect = "Allow"
@@ -268,22 +268,7 @@ module "app_filesystem" {
           }
         }
       }
-      ], var.enable_cloudfront ? [
-      {
-        Sid    = "AllowCloudFrontGetPublicObjects"
-        Effect = "Allow"
-        Principal = {
-          Service = "cloudfront.amazonaws.com"
-        }
-        Action   = "s3:GetObject"
-        Resource = "${module.app_filesystem.s3_bucket_arn}/public/*"
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.cdn[0].arn
-          }
-        }
-      }
-    ] : [])
+    ]
   })
 
   tags = merge(var.common_tags, {
@@ -636,6 +621,34 @@ resource "aws_cloudfront_origin_access_control" "s3" {
   signing_protocol                  = "sigv4"
 }
 
+# CloudFront bucket policy (separate to avoid circular dependency)
+resource "aws_s3_bucket_policy" "cloudfront_policy" {
+  count = var.enable_cloudfront ? 1 : 0
+
+  bucket = module.app_filesystem.s3_bucket_id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowCloudFrontGetPublicObjects"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${module.app_filesystem.s3_bucket_arn}/public/*"
+        Condition = {
+          StringEquals = {
+            "AWS:SourceArn" = "arn:aws:cloudfront::${var.caller_identity_account_id}:distribution/${aws_cloudfront_distribution.cdn[0].id}"
+          }
+        }
+      }
+    ]
+  })
+
+  depends_on = [module.app_filesystem]
+}
+
 resource "aws_cloudfront_distribution" "cdn" {
   count = var.enable_cloudfront ? 1 : 0
 
@@ -646,7 +659,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   default_root_object = ""
 
   origin {
-    domain_name              = module.app_filesystem.s3_bucket_regional_domain_name
+    domain_name              = module.app_filesystem.s3_bucket_bucket_regional_domain_name
     origin_id                = "s3-${module.app_filesystem.s3_bucket_id}"
     origin_access_control_id = aws_cloudfront_origin_access_control.s3[0].id
   }

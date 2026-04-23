@@ -39,3 +39,8 @@ output "redis_security_group_id" {
   description = "Redis Cache Security Group ID"
   value       = module.redis_sg.security_group_id
 }
+
+output "s3_filesystem_kms_key_arn" {
+  description = "S3 Filesystem KMS Key ARN"
+  value       = null
+}

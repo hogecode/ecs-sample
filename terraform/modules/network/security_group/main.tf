@@ -29,11 +29,22 @@ module "nextjs_sg" {
   description = "Security group for Next.js ECS tasks"
   vpc_id      = var.vpc_id
 
-  ingress_rules            = ["http-3000-tcp"]
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = 3000
+      to_port     = 3000
+      protocol    = "tcp"
+      cidr_blocks = "0.0.0.0/0"
+      description = "HTTP from ALB"
+    }
+  ]
   ingress_with_source_security_group_id = [
     {
-      rule                     = "http-3000-tcp"
+      from_port                = 3000
+      to_port                  = 3000
+      protocol                 = "tcp"
       source_security_group_id = module.alb_public_sg.security_group_id
+      description              = "HTTP from ALB"
     }
   ]
 

@@ -57,8 +57,13 @@ module "rds" {
   # Deletion Protection
   deletion_protection = var.environment == "prod" ? true : false
 
-  # Parameter Group
-  parameters = var.rds_parameters
+   # Parameter Group
+   parameters = [
+     for k, v in var.rds_parameters : {
+       name  = k
+       value = v
+     }
+   ]
 
   tags = {
     Name = "${var.project_name}-db-${var.environment}"
@@ -126,7 +131,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
   alarm_description   = "Alert when RDS CPU exceeds 80%"
 
   dimensions = {
-    DBInstanceIdentifier = module.rds.db_instance_id
+    DBInstanceIdentifier = try(module.rds.this_db_instance_id, module.rds.db_instance_id, "")
   }
 
   tags = {
@@ -146,7 +151,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_storage" {
   alarm_description   = "Alert when RDS storage is below 10 GB"
 
   dimensions = {
-    DBInstanceIdentifier = module.rds.db_instance_id
+    DBInstanceIdentifier = try(module.rds.this_db_instance_id, module.rds.db_instance_id, "")
   }
 
   tags = {
@@ -166,7 +171,7 @@ resource "aws_cloudwatch_metric_alarm" "rds_connections" {
   alarm_description   = "Alert when RDS connections exceed 80"
 
   dimensions = {
-    DBInstanceIdentifier = module.rds.db_instance_id
+    DBInstanceIdentifier = try(module.rds.this_db_instance_id, module.rds.db_instance_id, "")
   }
 
   tags = {

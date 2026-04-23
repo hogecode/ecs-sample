@@ -4,12 +4,12 @@
 
 output "log_group_name" {
   description = "CloudWatch log group name"
-  value       = module.cloudwatch_log_group_main.name
+  value       = try(module.cloudwatch_log_group_main.this_log_group_name, module.cloudwatch_log_group_main.name, "")
 }
 
 output "log_group_arn" {
   description = "CloudWatch log group ARN"
-  value       = module.cloudwatch_log_group_main.arn
+  value       = try(module.cloudwatch_log_group_main.this_log_group_arn, module.cloudwatch_log_group_main.arn, "")
 }
 
 output "alerts_topic_arn" {

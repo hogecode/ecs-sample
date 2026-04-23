@@ -12,20 +12,20 @@ output "queue_names_csv" {
 
 output "queue_urls" {
   description = "Map of logical queue name to SQS queue URL"
-  value       = { for k, q in aws_sqs_queue.queues : k => q.url }
+  value       = { for k, q in module.sqs_queues : k => q.queue_url }
 }
 
 output "queue_arns" {
   description = "Map of logical queue name to SQS queue ARN"
-  value       = { for k, q in aws_sqs_queue.queues : k => q.arn }
+  value       = { for k, q in module.sqs_queues : k => q.queue_arn }
 }
 
 output "deadletter_queue_arn" {
   description = "ARN of the deadletter SQS queue"
-  value       = aws_sqs_queue.deadletter.arn
+  value       = module.sqs_deadletter.queue_arn
 }
 
 output "deadletter_queue_url" {
   description = "URL of the SQS dead letter queue"
-  value       = aws_sqs_queue.deadletter.url
+  value       = module.sqs_deadletter.queue_url
 }

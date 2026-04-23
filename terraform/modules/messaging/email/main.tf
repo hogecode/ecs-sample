@@ -2,21 +2,6 @@
 # SES Configuration (using terraform-aws-modules)
 # ========================================
 
-module "ses" {
-  source = "terraform-aws-modules/ses/aws"
-  version = "~> 1.0"
-
-  domain_name           = var.domain_name
-  zone_id               = var.route53_zone_id
-  enable_dkim           = true
-  enable_spf            = true
-  verify_domain         = true
-
-  configuration_set_name = "${var.app_name}-${var.environment}"
-  
-  tags = var.common_tags
-}
-
 # Test email addresses for sandbox mode (individual emails - fallback option)
 resource "aws_ses_email_identity" "test_emails" {
   for_each = toset(var.test_email_addresses)

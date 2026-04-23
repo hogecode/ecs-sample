@@ -29,14 +29,8 @@ module "vpc" {
   nat_gateway_count         = local.nat_gateway_count
   enable_vpc_flow_logs      = local.enable_vpc_flow_logs
   
-  # This will be updated after security_group is created
-  vpc_endpoints_security_group_id = module.security_group.vpc_endpoints_security_group_id
-  
   # Tags
   tags = local.common_tags
-
-  # Ensure security_group is created first
-  depends_on = [module.security_group]
 }
 
 # ========================================
@@ -130,10 +124,10 @@ module "rds" {
   rds_backup_retention_days = local.rds_backup_retention_days
   rds_publicly_accessible   = var.rds_publicly_accessible
 
-  # Monitoring & Parameters
-  rds_parameter_group_family = var.rds_parameter_group_family
-  rds_parameters            = var.rds_parameters
-  enable_enhanced_monitoring = var.enable_enhanced_monitoring
+   # Monitoring & Parameters
+   rds_parameter_group_family = var.rds_parameter_group_family
+   rds_parameters            = var.rds_parameters
+   enable_enhanced_monitoring = var.enable_enhanced_monitoring
 
   depends_on = [module.vpc, module.security_group]
 }
@@ -190,7 +184,7 @@ module "email" {
 # Phase 9: Message Queue (SQS)
 # ========================================
 module "messaging" {
-  source = "./modules/messaging/messaging"
+  source = "./modules/messaging/sqs"
 
   app_name           = var.project_name
   environment        = var.environment
@@ -203,7 +197,7 @@ module "messaging" {
 # Phase 10: Storage (S3)
 # ========================================
 module "storage" {
-  source = "./modules/storage/storage"
+  source = "./modules/storage/s3"
 
   app_name                   = var.project_name
   environment                = var.environment
@@ -234,7 +228,7 @@ module "monitoring" {
 # Phase 12: CI/CD Pipeline Configuration
 # ========================================
 module "cicd" {
-  source = "./modules/cicd/cicd"
+  source = "./modules/cicd"
 
   project_name             = var.project_name
   environment              = var.environment
@@ -251,16 +245,16 @@ module "cicd" {
   ecr_repository_name      = var.ecr_nextjs_repository_name
 
   # ECS Configuration
-  ecs_cluster_name         = module.ecs.cluster_name
-  ecs_service_name         = module.ecs.service_name
+  ecs_cluster_name         = try(module.ecs.this_cluster_name, module.ecs.cluster_name, "")
+  ecs_service_name         = try(module.ecs.this_service_name, module.ecs.service_name, "")
   ecs_task_definition_family = "ecs-sample"
 
   # ALB Configuration
-  alb_target_group_arn     = module.alb.target_group_arn
+  alb_target_group_arn     = try(module.alb.target_group_arn, "")
 
   # Artifact Storage
-  artifact_bucket_name     = module.storage.artifact_bucket_name
-  kms_key_id              = module.storage.artifact_bucket_kms_key_id
+  artifact_bucket_name     = try(module.storage.alb_logs_bucket_id, "")
+  kms_key_id              = try(module.storage.artifact_bucket_kms_key_id, "")
 
   # CodeBuild Configuration
   codebuild_environment_compute_type = var.environment == "prod" ? "BUILD_GENERAL1_LARGE" : "BUILD_GENERAL1_MEDIUM"
