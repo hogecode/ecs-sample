@@ -62,7 +62,7 @@ terraform.init:
 	@$(tf) init -input=false
 
 .PHONY: terraform.graph
-terraform.graph:
+terraform.graph: ## ローカルのTerraform構成から依存関係グラフを生成
 	@echo "Generating Terraform dependency graph..."
 ifeq ($(OS),Windows_NT)
 	@cmd /c "cd terraform && terraform graph > terraform-graph.dot && echo Dependency graph generated: terraform-graph.dot"
@@ -79,6 +79,12 @@ else
 		echo "   Linux: apt-get install graphviz"; \
 	fi
 endif
+
+
+.PHONY: inframap.generate ## Terraformの状態からInframapを使用してインフラストラクチャ図を生成
+inframap.generate:
+	@$(tf) state pull > terraform.tfstate
+	@inframap generate --tfstate terraform.tfstate > inframap-diagram.dot
 
 
 # Terraform plan with explicit .tfvars target
@@ -236,6 +242,8 @@ help:
 	@echo ""
 	@echo "Infrastructure:"
 	@echo "  make terraform.graph                   - Generate dependency graph (DOT/PNG)"
+	@echo "  make inframap.generate                 - Generate infrastructure diagram with Inframap"
+	@echo "  make inframap.<env>.generate           - Generate infrastructure diagram for specific environment"
 	@echo ""
 	@echo "Docker:"
 	@echo "  make docker.<env>.build                - Build Docker image"
