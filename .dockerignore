@@ -4,50 +4,26 @@
 .gitignore
 .gitattributes
 
-# Test files
-tests/
-phpunit.xml
-.phpunit.result.cache
-pest.xml
-
-# NPM
+# Node.js
 node_modules/
+npm-debug.log
+yarn-error.log
 yarn.lock
+package-lock.json
+
+# Go
+*.o
+*.a
+*.so
+.DS_Store
+vendor/
 
 # Development files
 .env*
 !.env.example
 *.log
-npm-debug.log
-yarn-error.log
-.phpunit.result.cache
-Homestead.json
-Homestead.yaml
 .claude
 .husky
-
-# Storage and cache (we generate these during build)
-storage/logs/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/testing/*
-storage/app/*
-# Note: We do NOT ignore storage/framework/views/* or bootstrap/cache/*
-# because we'll generate them during the Docker build and want them in the image
-
-# Documentation
-AGENTS.md
-CONTRIBUTING.md
-CODE_OF_CONDUCT.md
-CLAUDE.md
-README.md
-RELEASE.md
-instructions
-
-# Build artifacts (we generate these during build)
-public/build
-public/hot
-public/storage
 
 # IDE files
 *.swp
@@ -61,11 +37,35 @@ public/storage
 *.temp
 .DS_Store
 
-# Infrastructure
+# Documentation
+AGENTS.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+CLAUDE.md
+README.md
+RELEASE.md
+instructions
+
+# Test coverage
+coverage/
+.nyc_output
+
+# Infrastructure (not needed in Docker images)
 terraform/
 infrastructure/
-docker-compose.yml
+diagrams/
+docs/
+Makefile
+Makefile.config.example
 
-# Coverage
-.nyc_output
-coverage
+# CI/CD
+.github/
+buildspec.yaml
+buildspec-scan.yaml
+appspec.yaml
+
+# Next.js specific
+.next/cache/
+
+# Miscellaneous
+新しいフォルダー/

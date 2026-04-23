@@ -69,7 +69,10 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload"
         ]
-        Resource = "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${var.ecr_repository_name}"
+        Resource = [
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${var.ecr_nextjs_repository_name}",
+          "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${var.ecr_go_server_repository_name}"
+        ]
       },
       {
         Effect = "Allow"
@@ -200,7 +203,7 @@ data "aws_caller_identity" "current" {}
 # CodeBuild Projects
 # ========================================
 
-# CodeBuild Project - Build Docker Image
+# CodeBuild Project - Build Docker Images (Multi-Service)
 resource "aws_codebuild_project" "build_project" {
   name = local.codebuild_build_project
   service_role = aws_iam_role.codebuild_role.arn
@@ -215,6 +218,27 @@ resource "aws_codebuild_project" "build_project" {
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
     privileged_mode            = var.codebuild_privileged_mode
+    
+    # Environment variables for multi-service builds
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID"
+      value = data.aws_caller_identity.current.account_id
+    }
+    
+    environment_variable {
+      name  = "AWS_DEFAULT_REGION"
+      value = var.aws_region
+    }
+    
+    environment_variable {
+      name  = "NEXTJS_REPO_NAME"
+      value = var.ecr_nextjs_repository_name
+    }
+    
+    environment_variable {
+      name  = "GO_SERVER_REPO_NAME"
+      value = var.ecr_go_server_repository_name
+    }
   }
 
   source {
@@ -356,7 +380,7 @@ resource "aws_codepipeline" "pipeline" {
   }
 
   # ========================================
-  # Build Stage - CodeBuild
+  # Build Stage - CodeBuild (Multi-Service)
   # ========================================
   stage {
     name = "Build"
@@ -371,7 +395,19 @@ resource "aws_codepipeline" "pipeline" {
       version          = "1"
 
       configuration = {
-        ProjectName = aws_codebuild_project.build_project.name
+        ProjectName          = aws_codebuild_project.build_project.name
+        EnvironmentVariables = jsonencode([
+          {
+            name  = "NEXTJS_REPO_NAME"
+            value = var.ecr_nextjs_repository_name
+            type  = "PLAINTEXT"
+          },
+          {
+            name  = "GO_SERVER_REPO_NAME"
+            value = var.ecr_go_server_repository_name
+            type  = "PLAINTEXT"
+          }
+        ])
       }
     }
   }

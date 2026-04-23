@@ -241,9 +241,6 @@ module "cicd" {
   github_branch_develop    = "develop"
   github_branch_main       = "main"
 
-  # ECR Configuration
-  ecr_repository_name      = var.ecr_nextjs_repository_name
-
   # ECS Configuration
   ecs_cluster_name         = try(module.ecs.this_cluster_name, module.ecs.cluster_name, "")
   ecs_service_name         = try(module.ecs.this_service_name, module.ecs.service_name, "")

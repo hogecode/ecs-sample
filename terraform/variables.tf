@@ -284,16 +284,22 @@ variable "enable_enhanced_monitoring" {
 # ECR Container Registry Configuration
 # ========================================
 
+variable "ecr_repository_name" {
+  description = "ECR repository name for Next.js frontend service (deprecated, use ecr_nextjs_repository_name)"
+  type        = string
+  default     = "ecs-nextjs"
+}
+
 variable "ecr_nextjs_repository_name" {
   description = "ECR repository name for Next.js frontend service"
   type        = string
-  default     = "ecs-nextjs"
+  default     = "ecs-sample-nextjs"
 }
 
 variable "ecr_go_server_repository_name" {
   description = "ECR repository name for Go server backend service"
   type        = string
-  default     = "ecs-go-server"
+  default     = "ecs-sample-server"
 }
 
 variable "ecr_image_scan_on_push" {
