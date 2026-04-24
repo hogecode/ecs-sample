@@ -114,3 +114,47 @@ variable "event_input_path" {
   type        = string
   default     = "$"
 }
+
+# ========================================
+# S3 Trigger Configuration
+# ========================================
+
+variable "enable_s3_trigger" {
+  description = "Enable S3 event notification trigger for Lambda"
+  type        = bool
+  default     = false
+}
+
+variable "s3_bucket_id" {
+  description = "S3 bucket ID for triggering Lambda"
+  type        = string
+  default     = ""
+}
+
+variable "s3_key_prefix" {
+  description = "S3 object key prefix filter for Lambda trigger"
+  type        = string
+  default     = ""
+}
+
+variable "s3_events" {
+  description = "S3 events that trigger Lambda (e.g., s3:ObjectCreated:*)"
+  type        = list(string)
+  default     = ["s3:ObjectCreated:*"]
+}
+
+# ========================================
+# S3 Validation Configuration
+# ========================================
+
+variable "allowed_file_types" {
+  description = "Allowed MIME types for S3 file validation"
+  type        = list(string)
+  default     = ["image/jpeg", "image/png", "image/gif", "application/pdf"]
+}
+
+variable "max_file_size_mb" {
+  description = "Maximum file size in MB"
+  type        = number
+  default     = 10
+}

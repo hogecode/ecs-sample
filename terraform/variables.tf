@@ -456,6 +456,75 @@ variable "tags" {
 }
 
 # ========================================
+# Lambda Configuration
+# ========================================
+
+variable "enable_s3_validation_lambda" {
+  description = "Enable S3 file validation Lambda function and S3 event trigger"
+  type        = bool
+  default     = true
+}
+
+# ========================================
+# Bastion Fargate Configuration
+# ========================================
+
+variable "bastion_image_uri" {
+  description = "ECR image URI for bastion container"
+  type        = string
+  default     = ""
+}
+
+variable "bastion_container_cpu" {
+  description = "CPU units for bastion container (256, 512, 1024, 2048, 4096)"
+  type        = number
+  default     = 256
+  
+  validation {
+    condition     = contains([256, 512, 1024, 2048, 4096], var.bastion_container_cpu)
+    error_message = "Bastion CPU must be one of: 256, 512, 1024, 2048, 4096"
+  }
+}
+
+variable "bastion_container_memory" {
+  description = "Memory (MB) for bastion container"
+  type        = number
+  default     = 512
+  
+  validation {
+    condition     = var.bastion_container_memory >= 512 && var.bastion_container_memory <= 30720
+    error_message = "Bastion memory must be between 512 and 30720 MB"
+  }
+}
+
+variable "rds_master_password_secret_arn" {
+  description = "ARN of AWS Secrets Manager secret containing RDS master password"
+  type        = string
+  default     = ""
+}
+
+variable "app_db_username" {
+  description = "Application database username for bastion configuration"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "app_db_password" {
+  description = "Application database password"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "db_read_only_password" {
+  description = "Read-only database user password"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+# ========================================
 # CI/CD Configuration
 # ========================================
 

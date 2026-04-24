@@ -1,77 +1,129 @@
 # ========================================
-# Secrets Manager Module - Using terraform-aws-secrets-manager module
+# Random Password Generation
 # ========================================
 
-module "app_secrets" {
-  source  = "terraform-aws-modules/secrets-manager/aws"
-  version = "~> 1.0"
+resource "random_password" "rds_master_password" {
+  length            = 20
+  special           = true
+  override_special  = "!#$%&*()-_=+[]{}<>:?"
+  min_lower         = 2
+  min_numeric       = 2
+  min_special       = 2
+  min_upper         = 2
+}
 
-  name_prefix             = "${var.app_name}/"
-  description             = "Application secrets for ${var.app_name}-${var.environment}"
-  kms_key_id              = var.secrets_kms_key_id
+resource "random_password" "app_db_password" {
+  length            = 20
+  special           = true
+  override_special  = "!#$%&*()-_=+[]{}<>:?"
+  min_lower         = 2
+  min_numeric       = 2
+  min_special       = 2
+  min_upper         = 2
+}
 
-  # Store secrets as a JSON object
-  secret_string = jsonencode({
-    APP_KEY                 = var.app_key
-    DB_HOST                 = var.rds_endpoint
-    DB_DATABASE             = var.rds_database_name
-    DB_USERNAME             = var.app_db_username
-    DB_PASSWORD             = var.app_db_password
-    AWS_ACCESS_KEY_ID       = var.aws_access_key_id
-    AWS_SECRET_ACCESS_KEY   = var.aws_secret_access_key
-    DB_READ_HOST            = var.rds_read_replica_endpoint != "" ? var.rds_read_replica_endpoint : var.rds_endpoint
-  })
-
-  recovery_window_in_days = 7
-
-  tags = merge(var.common_tags, {
-    Name = "${var.app_name}-${var.environment}-secrets"
-  })
+resource "random_password" "db_read_only_password" {
+  length            = 20
+  special           = true
+  override_special  = "!#$%&*()-_=+[]{}<>:?"
+  min_lower         = 2
+  min_numeric       = 2
+  min_special       = 2
+  min_upper         = 2
 }
 
 # ========================================
-# Additional Secrets (if needed for specific services)
+# RDS Master Password Secret
 # ========================================
 
-module "database_credentials" {
-  source  = "terraform-aws-modules/secrets-manager/aws"
-  version = "~> 1.0"
+resource "aws_secretsmanager_secret" "rds_master_password" {
+  name_prefix             = "${var.app_name}/rds/master-password-"
+  description             = "RDS master password for ${var.app_name}-${var.environment}"
+  kms_key_id              = var.secrets_kms_key_id # TODO: kmsモジュールを作成してKMSキーを管理する
+  recovery_window_in_days = 7
 
-  name_prefix             = "${var.app_name}/db/"
-  description             = "Database credentials for ${var.app_name}-${var.environment}"
+  tags = merge(var.common_tags, {
+    Name = "${var.app_name}-${var.environment}-rds-master-password"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "rds_master_password" {
+  secret_id       = aws_secretsmanager_secret.rds_master_password.id
+  secret_string   = random_password.rds_master_password.result
+}
+
+# ========================================
+# Application Database Credentials Secret
+# ========================================
+
+resource "aws_secretsmanager_secret" "app_db_credentials" {
+  name_prefix             = "${var.app_name}/db/app-credentials-"
+  description             = "Application database credentials for ${var.app_name}-${var.environment}"
   kms_key_id              = var.secrets_kms_key_id
+  recovery_window_in_days = 7
 
+  tags = merge(var.common_tags, {
+    Name = "${var.app_name}-${var.environment}-app-db-credentials"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "app_db_credentials" {
+  secret_id = aws_secretsmanager_secret.app_db_credentials.id
   secret_string = jsonencode({
     username = var.app_db_username
-    password = var.app_db_password
+    password = random_password.app_db_password.result
     host     = var.rds_endpoint
     database = var.rds_database_name
-    port     = 5432
-  })
-
-  recovery_window_in_days = 7
-
-  tags = merge(var.common_tags, {
-    Name = "${var.app_name}-${var.environment}-db-secrets"
+    port     = var.rds_port
+    engine   = var.db_engine
   })
 }
 
-module "aws_credentials" {
-  source  = "terraform-aws-modules/secrets-manager/aws"
-  version = "~> 1.0"
+# ========================================
+# Read-Only Database User Password Secret
+# ========================================
 
-  name_prefix             = "${var.app_name}/aws/"
-  description             = "AWS credentials for ${var.app_name}-${var.environment}"
+resource "aws_secretsmanager_secret" "db_read_only_password" {
+  name_prefix             = "${var.app_name}/db/readonly-password-"
+  description             = "Read-only database user password for ${var.app_name}-${var.environment}"
   kms_key_id              = var.secrets_kms_key_id
-
-  secret_string = jsonencode({
-    access_key_id     = var.aws_access_key_id
-    secret_access_key = var.aws_secret_access_key
-  })
-
   recovery_window_in_days = 7
 
   tags = merge(var.common_tags, {
-    Name = "${var.app_name}-${var.environment}-aws-secrets"
+    Name = "${var.app_name}-${var.environment}-db-readonly-password"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "db_read_only_password" {
+  secret_id       = aws_secretsmanager_secret.db_read_only_password.id
+  secret_string   = random_password.db_read_only_password.result
+}
+
+# ========================================
+# Application Secrets (combining all)
+# ========================================
+
+resource "aws_secretsmanager_secret" "app_secrets" {
+  name_prefix             = "${var.app_name}/app-secrets-"
+  description             = "Application secrets for ${var.app_name}-${var.environment}"
+  kms_key_id              = var.secrets_kms_key_id
+  recovery_window_in_days = 7
+
+  tags = merge(var.common_tags, {
+    Name = "${var.app_name}-${var.environment}-app-secrets"
+  })
+}
+
+resource "aws_secretsmanager_secret_version" "app_secrets" {
+  secret_id = aws_secretsmanager_secret.app_secrets.id
+  secret_string = jsonencode({
+    APP_KEY                   = var.app_key != "" ? var.app_key : random_password.rds_master_password.result
+    DB_HOST                   = var.rds_endpoint
+    DB_DATABASE               = var.rds_database_name
+    DB_USERNAME               = var.app_db_username
+    DB_PASSWORD               = random_password.app_db_password.result
+    DB_READ_HOST              = var.rds_read_replica_endpoint != "" ? var.rds_read_replica_endpoint : var.rds_endpoint
+    DB_READ_ONLY_USERNAME     = var.db_read_only_username
+    DB_READ_ONLY_PASSWORD     = random_password.db_read_only_password.result
   })
 }

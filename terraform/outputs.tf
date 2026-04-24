@@ -3,7 +3,7 @@
 # ========================================
 # Phase 1: VPC & Network Configuration
 # ========================================
-
+/* 一時的にコメントアウト
 # VPC Outputs
 output "vpc_id" {
   description = "VPC ID"
@@ -209,3 +209,4 @@ output "project_name" {
   description = "Project name"
   value       = var.project_name
 }
+*/

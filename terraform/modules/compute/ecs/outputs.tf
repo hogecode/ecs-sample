@@ -83,11 +83,6 @@ output "nextjs_service_name" {
   value       = aws_ecs_service.nextjs.name
 }
 
-output "nextjs_service_arn" {
-  description = "ARN of Next.js ECS service"
-  value       = aws_ecs_service.nextjs.arn
-}
-
 output "nextjs_service_cluster" {
   description = "Cluster of Next.js ECS service"
   value       = aws_ecs_service.nextjs.cluster
@@ -96,11 +91,6 @@ output "nextjs_service_cluster" {
 output "go_server_service_name" {
   description = "Name of Go Server ECS service"
   value       = aws_ecs_service.go_server.name
-}
-
-output "go_server_service_arn" {
-  description = "ARN of Go Server ECS service"
-  value       = aws_ecs_service.go_server.arn
 }
 
 output "go_server_service_cluster" {

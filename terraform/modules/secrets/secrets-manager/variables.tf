@@ -65,6 +65,25 @@ variable "rds_read_replica_endpoint" {
   default     = ""
 }
 
+variable "rds_port" {
+  description = "RDS database port"
+  type        = number
+  default     = 3306
+}
+
+variable "db_engine" {
+  description = "Database engine type (mysql, postgres)"
+  type        = string
+  default     = "mysql"
+}
+
+variable "db_read_only_username" {
+  description = "Read-only database user username"
+  type        = string
+  default     = "readonly"
+  sensitive   = true
+}
+
 variable "secrets_kms_key_id" {
   description = "KMS key ID for secrets encryption"
   type        = string

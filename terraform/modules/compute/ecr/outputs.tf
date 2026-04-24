@@ -14,7 +14,7 @@ output "nextjs_repository_arn" {
 
 output "nextjs_repository_name" {
   description = "Next.js ECR repository name"
-  value       = module.nextjs_ecr.repository_name
+  value       = var.ecr_nextjs_repository_name
 }
 
 output "go_server_repository_url" {
@@ -29,5 +29,5 @@ output "go_server_repository_arn" {
 
 output "go_server_repository_name" {
   description = "Go Server ECR repository name"
-  value       = module.go_server_ecr.repository_name
+  value       = var.ecr_go_server_repository_name
 }

@@ -1,6 +1,9 @@
 # ========================================
 # Root Module - Infrastructure Orchestration
+# VPC, SG, ACM, ALB, ECS, Bastion, S3, RDS,  CloudWatch, CI/CD, ElastiCache, Lambda, SES, SQS,
 # ========================================
+# TODO: cloudfrontも追加する
+
 
 # Get current AWS account ID
 data "aws_caller_identity" "current" {}
@@ -47,10 +50,63 @@ module "security_group" {
   vpc_cidr     = module.vpc.vpc_cidr
 }
 
+# ========================================
+# Phase 2: Secrets Manager Configuration
+# ========================================
+module "secrets" {
+  source = "./modules/secrets/secrets-manager"
+
+  app_name                     = var.project_name
+  environment                  = var.environment
+  
+  # RDS Configuration
+  rds_endpoint                 = ""  # Will be updated after RDS creation
+  rds_database_name            = var.rds_database_name
+  rds_port                     = 3306
+  db_engine                    = var.rds_engine
+  
+  # Database User Credentials
+  app_db_username              = var.app_db_username != "" ? var.app_db_username : "appuser"
+  db_read_only_username        = "readonly"
+  
+  # Optional: App Key (if needed)
+  app_key                      = ""
+  
+  # KMS Encryption
+  secrets_kms_key_id           = ""
+  
+  # Tags
+  common_tags                  = local.common_tags
+
+  depends_on = [module.security_group]
+}
+
+
+# ========================================
+# Phase 3: SSL/TLS Certificates (ACM)
+# ========================================
+/*
+module "certificates" {
+  source = "./modules/cdn/certificates"
+
+  app_name                  = var.project_name
+  environment               = var.environment
+  domain_name              = var.domain_name
+  # TODO: zone_idを渡すのではなく、Route53のゾーンを作成して、そのゾーンIDを渡すようにする
+  # data "aws_route53_zone" で取得するのが基本
+  # あるいはzone_id = aws_route53_zone.this.zone_id
+  route53_zone_id          = var.route53_zone_id
+  common_tags              = local.common_tags
+
+  depends_on = [module.vpc]
+}
+*/
+
 
 # ========================================
 # Phase 3: Application Load Balancer Configuration
 # ========================================
+# TODO: ALBでHTTPSを有効にする場合は、ACMで作成した証明書のARNを渡すようにする
 module "alb" {
   source = "./modules/network/alb"
 
@@ -74,6 +130,7 @@ module "alb" {
   depends_on = [module.security_group, module.vpc]
 }
 
+
 # ========================================
 # Phase 4: ECR Configuration
 # ========================================
@@ -86,6 +143,7 @@ module "ecr" {
   ecr_image_scan_on_push         = var.ecr_image_scan_on_push
   ecr_image_tag_mutability       = var.ecr_image_tag_mutability
 }
+
 
 # ========================================
 # Phase 4: ECS Configuration
@@ -127,8 +185,71 @@ module "ecs" {
   depends_on = [module.vpc, module.security_group, module.alb, module.ecr]
 }
 
+
 # ========================================
-# Phase 5: RDS Database Configuration
+# Phase 4: Bastion Fargate Configuration
+# ========================================
+module "bastion_fargate" {
+  source = "./modules/compute/bastion-fargate"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  aws_region                = var.aws_region
+  
+  # Network Configuration
+  vpc_id                    = module.vpc.vpc_id
+  private_subnet_ids        = module.vpc.private_app_subnets
+  bastion_security_group_id = module.security_group.bastion_security_group_id
+  
+  # ECS Configuration
+  ecs_cluster_name = try(module.ecs.this_cluster_name, module.ecs.cluster_name, "")
+  
+  # Bastion Container Configuration
+  bastion_image_uri = var.bastion_image_uri
+  container_cpu     = var.bastion_container_cpu
+  container_memory  = var.bastion_container_memory
+  
+  # Logging Configuration
+  logs_retention_days = local.logs_retention_days
+  
+  # Database Configuration
+  rds_endpoint                   = module.rds.rds_instance_endpoint
+  rds_master_username            = var.rds_username
+  rds_master_password_secret_arn = var.rds_master_password_secret_arn
+  rds_database_name              = var.rds_database_name
+  
+  # Application Database Configuration
+  app_db_username  = var.app_db_username
+  app_db_password  = var.app_db_password
+  db_read_only_password = var.db_read_only_password
+  db_engine        = var.rds_engine
+  
+  # Tags
+  tags = local.common_tags
+
+  depends_on = [module.ecs, module.vpc, module.security_group]
+}
+
+/*
+# ========================================
+# Phase 5: Storage (S3)
+# ========================================
+module "storage" {
+  source = "./modules/storage/s3"
+
+  app_name                   = var.project_name
+  environment                = var.environment
+  domain_name                = var.domain_name
+  aws_region                 = var.aws_region
+  certificate_arn            = module.certificates.certificate_arn
+  s3_filesystem_kms_key_arn  = module.security_group.s3_filesystem_kms_key_arn
+  caller_identity_account_id = data.aws_caller_identity.current.account_id
+  common_tags                = local.common_tags
+}
+*/
+
+# ========================================
+# Phase 6: RDS Database Configuration
 # ========================================
 module "rds" {
   source = "./modules/database/rds"
@@ -160,88 +281,28 @@ module "rds" {
   depends_on = [module.vpc, module.security_group]
 }
 
+/*
 # ========================================
 # Phase 6: ElastiCache (Redis) Configuration
 # ========================================
-module "cache" {
-  source = "./modules/database/cache"
-
-  app_name              = var.project_name
-  environment           = var.environment
-  private_subnets      = module.vpc.private_app_subnets
-  redis_security_group_id = module.security_group.redis_security_group_id
-  redis_node_type      = "cache.t3.micro"
-  snapshot_retention_limit = 5
-  snapshot_window      = "03:00-05:00"
-  maintenance_window   = "sun:05:00-sun:06:00"
-  common_tags          = local.common_tags
+#module "cache" {
+#  source = "./modules/database/cache"
+#
+#  app_name              = var.project_name
+#  environment           = var.environment
+#  private_subnets      = module.vpc.private_app_subnets
+#  redis_security_group_id = module.security_group.redis_security_group_id
+#  redis_node_type      = "cache.t3.micro"
+#  snapshot_retention_limit = 5
+#  snapshot_window      = "03:00-05:00"
+#  maintenance_window   = "sun:05:00-sun:06:00"
+#  common_tags          = local.common_tags
 }
 
-# ========================================
-# Phase 7: SSL/TLS Certificates (ACM)
-# ========================================
-module "certificates" {
-  source = "./modules/cdn/certificates"
 
-  app_name                  = var.project_name
-  environment               = var.environment
-  domain_name              = var.domain_name
-  # TODO: zone_idを渡すのではなく、Route53のゾーンを作成して、そのゾーンIDを渡すようにする
-  # data "aws_route53_zone" で取得するのが基本
-  # あるいはzone_id = aws_route53_zone.this.zone_id
-  route53_zone_id          = var.route53_zone_id
-  common_tags              = local.common_tags
-
-  depends_on = [module.vpc]
-}
 
 # ========================================
-# Phase 8: Email Service (SES)
-# ========================================
-module "email" {
-  source = "./modules/messaging/email"
-
-  app_name                     = var.project_name
-  environment                  = var.environment
-  domain_name                  = var.domain_name
-  route53_zone_id              = var.route53_zone_id
-  test_email_addresses         = var.test_email_addresses
-  test_email_domains           = var.test_email_domains
-  test_domain_route53_zone_id  = var.test_domain_route53_zone_id
-  common_tags                  = local.common_tags
-}
-
-# ========================================
-# Phase 9: Message Queue (SQS)
-# ========================================
-module "messaging" {
-  source = "./modules/messaging/sqs"
-
-  app_name           = var.project_name
-  environment        = var.environment
-  queue_names        = var.sqs_queue_names
-  sqs_kms_key_arn    = var.sqs_kms_key_arn
-  common_tags        = local.common_tags
-}
-
-# ========================================
-# Phase 10: Storage (S3)
-# ========================================
-module "storage" {
-  source = "./modules/storage/s3"
-
-  app_name                   = var.project_name
-  environment                = var.environment
-  domain_name                = var.domain_name
-  aws_region                 = var.aws_region
-  certificate_arn            = module.certificates.certificate_arn
-  s3_filesystem_kms_key_arn  = module.security_group.s3_filesystem_kms_key_arn
-  caller_identity_account_id = data.aws_caller_identity.current.account_id
-  common_tags                = local.common_tags
-}
-
-# ========================================
-# Phase 11: Monitoring & Logging
+# Phase 7: Monitoring & Logging
 # ========================================
 module "monitoring" {
   source = "./modules/monitoring/cloudwatch"
@@ -252,11 +313,11 @@ module "monitoring" {
   cloudtrail_bucket_name       = var.cloudtrail_bucket_name
   common_tags                  = local.common_tags
 
-  depends_on = [module.ecs, module.rds, module.alb]
+  depends_on = [module.ecs, module.rds, module.alb, module.s3_validation_lambda]
 }
 
 # ========================================
-# Phase 12: CI/CD Pipeline Configuration
+# Phase 8: CI/CD Pipeline Configuration
 # ========================================
 module "cicd" {
   source = "./modules/cicd"
@@ -297,4 +358,77 @@ module "cicd" {
 
   depends_on = [module.ecs, module.alb, module.storage]
 }
+
+
+# ========================================
+# Phase 9: Email Service (SES)
+# ========================================
+#
+#module "email" {
+#  source = "./modules/messaging/email"
+#
+#  app_name                     = var.project_name
+#  environment                  = var.environment
+#  domain_name                  = var.domain_name
+#  route53_zone_id              = var.route53_zone_id
+#  test_email_addresses         = var.test_email_addresses
+#  test_email_domains           = var.test_email_domains
+#  test_domain_route53_zone_id  = var.test_domain_route53_zone_id
+#  common_tags                  = local.common_tags
+#}
+
+
+
+# ========================================
+# Phase 9: Message Queue (SQS)
+# ========================================
+module "messaging" {
+  source = "./modules/messaging/sqs"
+
+  app_name           = var.project_name
+  environment        = var.environment
+  queue_names        = var.sqs_queue_names
+  sqs_kms_key_arn    = var.sqs_kms_key_arn
+  common_tags        = local.common_tags
+}
+
+
+
+# ========================================
+# Phase 10: Lambda Functions
+# ========================================
+module "s3_validation_lambda" {
+  source = "./modules/lambda"
+
+  lambda_function_name = "s3-file-validator"
+  lambda_description   = "S3 file validation Lambda function - checks file size and MIME type"
+  lambda_handler       = "index.handler"
+  lambda_runtime       = "nodejs20.x"
+  lambda_source_path   = "${path.module}/../lambda"
+
+  # S3 trigger configuration
+  enable_s3_trigger = var.enable_s3_validation_lambda
+  s3_bucket_id      = try(module.storage.file_upload_bucket_id, "")
+  s3_key_prefix     = "uploads/"
+  s3_events         = ["s3:ObjectCreated:*"]
+
+  # Lambda configuration
+  lambda_timeout     = 60
+  lambda_memory_size = 256
+
+  # Environment variables
+  environment_variables = {
+    MAX_FILE_SIZE_MB = "10"
+  }
+
+  # CloudWatch logs
+  logs_retention_days = local.logs_retention_days
+
+  # Tags
+  common_tags = local.common_tags
+
+  depends_on = [module.storage]
+}
+*/
+
 
