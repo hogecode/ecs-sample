@@ -313,6 +313,27 @@ resource "aws_codebuild_project" "scan_project" {
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
     privileged_mode             = var.codebuild_privileged_mode
+
+    # Environment variables for security scan
+    environment_variable {
+      name  = "AWS_ACCOUNT_ID"
+      value = data.aws_caller_identity.current.account_id
+    }
+
+    environment_variable {
+      name  = "AWS_DEFAULT_REGION"
+      value = var.aws_region
+    }
+
+    environment_variable {
+      name  = "NEXTJS_REPO_NAME"
+      value = var.ecr_nextjs_repository_name
+    }
+
+    environment_variable {
+      name  = "GO_SERVER_REPO_NAME"
+      value = var.ecr_go_server_repository_name
+    }
   }
 
   source {
