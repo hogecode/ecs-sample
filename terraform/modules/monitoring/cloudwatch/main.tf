@@ -20,6 +20,7 @@ module "cloudwatch_log_group_main" {
 # ========================================
 
 module "cloudwatch_metric_alarm_health_check" {
+  count   = var.route53_health_check_id != "" ? 1 : 0
   source  = "terraform-aws-modules/cloudwatch/aws//modules/metric-alarm"
   version = "~> 5.0"
 

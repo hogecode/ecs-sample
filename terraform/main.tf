@@ -51,6 +51,21 @@ module "security_group" {
 }
 
 # ========================================
+# Phase 2: KMS Configuration
+# ========================================
+module "kms" {
+  source = "./modules/security/kms"
+
+  project_name            = var.project_name
+  environment             = var.environment
+  enable_kms_encryption   = var.enable_kms_encryption
+  kms_deletion_window_days = var.kms_deletion_window_days
+  common_tags             = local.common_tags
+
+  depends_on = [module.security_group]
+}
+
+# ========================================
 # Phase 2: Secrets Manager Configuration
 # ========================================
 module "secrets" {
@@ -73,12 +88,12 @@ module "secrets" {
   app_key                      = ""
   
   # KMS Encryption
-  secrets_kms_key_id           = ""
+  secrets_kms_key_id           = module.kms.secrets_manager_key_id
   
   # Tags
   common_tags                  = local.common_tags
 
-  depends_on = [module.security_group]
+  depends_on = [module.security_group, module.kms]
 }
 
 
@@ -280,7 +295,7 @@ module "rds" {
   depends_on = [module.vpc, module.security_group]
 }
 
-/*
+
 # ========================================
 # Phase 6: ElastiCache (Redis) Configuration
 # ========================================
@@ -296,7 +311,8 @@ module "rds" {
 #  snapshot_window      = "03:00-05:00"
 #  maintenance_window   = "sun:05:00-sun:06:00"
 #  common_tags          = local.common_tags
-}
+#  depends_on = [module.vpc, module.security_group]
+#}
 
 
 
@@ -308,13 +324,14 @@ module "monitoring" {
 
   app_name                     = var.project_name
   environment                  = var.environment
-  cloudwatch_logs_kms_key_id   = var.cloudwatch_logs_kms_key_id
+  cloudwatch_logs_kms_key_id   = var.enable_kms_encryption ? module.kms.cloudwatch_logs_key_id : var.cloudwatch_logs_kms_key_id
   cloudtrail_bucket_name       = var.cloudtrail_bucket_name
   common_tags                  = local.common_tags
 
-  depends_on = [module.ecs, module.rds, module.alb, module.s3_validation_lambda]
+  depends_on = [module.ecs, module.rds, module.alb, module.kms]
 }
 
+/*
 # ========================================
 # Phase 8: CI/CD Pipeline Configuration
 # ========================================

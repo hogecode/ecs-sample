@@ -534,3 +534,24 @@ variable "github_token" {
   sensitive   = true
   default     = ""
 }
+
+# ========================================
+# KMS Configuration
+# ========================================
+
+variable "enable_kms_encryption" {
+  description = "Enable KMS encryption for CloudWatch, RDS, S3, SQS, and Secrets Manager"
+  type        = bool
+  default     = false
+}
+
+variable "kms_deletion_window_days" {
+  description = "KMS key deletion window in days (7-30)"
+  type        = number
+  default     = 10
+  
+  validation {
+    condition     = var.kms_deletion_window_days >= 7 && var.kms_deletion_window_days <= 30
+    error_message = "KMS deletion window must be between 7 and 30 days."
+  }
+}
