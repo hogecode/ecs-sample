@@ -454,25 +454,25 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 
-  # ========================================
-  # Scan Stage - CodeBuild
-  # ========================================
-  stage {
-    name = "Scan"
+   # ========================================
+   # Scan Stage - CodeBuild
+   # ========================================
+   stage {
+     name = "Scan"
 
-    action {
-      name            = "ScanAction"
-      category        = "Build"
-      owner           = "AWS"
-      provider        = "CodeBuild"
-      input_artifacts = ["build_output"]
-      version         = "1"
+     action {
+       name            = "ScanAction"
+       category        = "Build"
+       owner           = "AWS"
+       provider        = "CodeBuild"
+       input_artifacts = ["source_output"]
+       version         = "1"
 
-      configuration = {
-        ProjectName = aws_codebuild_project.scan_project.name
-      }
-    }
-  }
+       configuration = {
+         ProjectName = aws_codebuild_project.scan_project.name
+       }
+     }
+   }
 
   # ========================================
   # Deploy Stage (Approval for Prod)
