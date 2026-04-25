@@ -235,6 +235,15 @@ resource "aws_iam_role_policy" "codedeploy_policy" {
             ]
           }
         }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/codedeploy/*"
       }
     ]
   })
@@ -363,6 +372,17 @@ resource "aws_cloudwatch_log_group" "codebuild_build_log" {
 
 resource "aws_cloudwatch_log_group" "codebuild_scan_log" {
   name_prefix       = "/aws/codebuild/${local.codebuild_scan_project}"
+  retention_in_days = 14
+
+  tags = var.common_tags
+}
+
+# ========================================
+# CloudWatch Logs for CodeDeploy
+# ========================================
+
+resource "aws_cloudwatch_log_group" "codedeploy_log" {
+  name_prefix       = "/aws/codedeploy/${local.codedeploy_app_name}"
   retention_in_days = 14
 
   tags = var.common_tags
