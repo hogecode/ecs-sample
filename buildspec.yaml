@@ -41,14 +41,22 @@ phases:
       - echo "=========================================="
       - echo "Phase Post-Build Push to ECR"
       - echo "=========================================="
-      - "echo \"Pushing Next.js Docker image to ECR on $(date)\""
-      - "docker push $NEXTJS_REPO_URI:$IMAGE_TAG"
-      - "docker push $NEXTJS_REPO_URI:latest"
+      - echo "Pushing Next.js Docker image to ECR on $(date)"
+      - docker push $NEXTJS_REPO_URI:$IMAGE_TAG
+      - docker push $NEXTJS_REPO_URI:latest
       - echo "Next.js Docker image pushed successfully"
-      - "echo \"Pushing Go Server Docker image to ECR on $(date)\""
-      - "docker push $GO_SERVER_REPO_URI:$IMAGE_TAG"
-      - "docker push $GO_SERVER_REPO_URI:latest"
+      - echo "Pushing Go Server Docker image to ECR on $(date)"
+      - docker push $GO_SERVER_REPO_URI:$IMAGE_TAG
+      - docker push $GO_SERVER_REPO_URI:latest
       - echo "Go Server Docker image pushed successfully"
+      - echo "Generating imagedefinitions.json for ECS deployment"
+      - |
+        printf '[
+          {"name":"nextjs-container","imageUri":"%s"},
+          {"name":"go-server-container","imageUri":"%s"}
+        ]' $NEXTJS_REPO_URI:$IMAGE_TAG $GO_SERVER_REPO_URI:$IMAGE_TAG > imagedefinitions.json
+      - cat imagedefinitions.json
+      
       - echo "=========================================="
       - echo "Build completed successfully"
       - echo "=========================================="
