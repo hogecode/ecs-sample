@@ -4,12 +4,12 @@
 
 output "ecs_service_name" {
   description = "Name of the ECS service"
-  value       = aws_ecs_service.bastion.name
+  value       = try(aws_ecs_service.bastion[0].name, "")
 }
 
 output "ecs_task_definition_arn" {
   description = "ARN of the ECS task definition"
-  value       = aws_ecs_task_definition.bastion.arn
+  value       = try(aws_ecs_task_definition.bastion[0].arn, "")
 }
 
 output "cloudwatch_log_group_name" {
@@ -29,5 +29,5 @@ output "task_role_arn" {
 
 output "ssm_session_command" {
   description = "Command to start an SSM session to the bastion"
-  value       = "aws ssm start-session --target ecs:${var.ecs_cluster_name}:${aws_ecs_service.bastion.name} --region ${var.aws_region}"
+  value       = var.bastion_image_uri != "" ? "aws ssm start-session --target ecs:${var.ecs_cluster_name}:${aws_ecs_service.bastion[0].name} --region ${var.aws_region}" : ""
 }

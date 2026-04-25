@@ -26,7 +26,7 @@ module "rds" {
   allocated_storage    = var.rds_allocated_storage
   storage_type         = "gp3"
   storage_encrypted    = true
-  storage_throughput   = 125
+  storage_throughput   = var.rds_allocated_storage >= 400 ? 125 : null
 
   # Database configuration
   db_name  = var.rds_database_name
@@ -126,6 +126,8 @@ resource "aws_iam_role_policy_attachment" "rds_monitoring" {
 # ========================================
 
 resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
+  count = try(module.rds.this_db_instance_id, module.rds.db_instance_id, "") != "" ? 1 : 0
+
   alarm_name          = "${var.project_name}-rds-cpu-high-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2
@@ -146,6 +148,8 @@ resource "aws_cloudwatch_metric_alarm" "rds_cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds_storage" {
+  count = try(module.rds.this_db_instance_id, module.rds.db_instance_id, "") != "" ? 1 : 0
+
   alarm_name          = "${var.project_name}-rds-storage-low-${var.environment}"
   comparison_operator = "LessThanThreshold"
   evaluation_periods  = 1
@@ -166,6 +170,8 @@ resource "aws_cloudwatch_metric_alarm" "rds_storage" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "rds_connections" {
+  count = try(module.rds.this_db_instance_id, module.rds.db_instance_id, "") != "" ? 1 : 0
+
   alarm_name          = "${var.project_name}-rds-connections-high-${var.environment}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 2

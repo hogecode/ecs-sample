@@ -43,32 +43,36 @@ resource "aws_iam_role_policy" "bastion_task_execution_custom" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchGetImage",
-          "ecr:GetDownloadUrlForLayer"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "${aws_cloudwatch_log_group.bastion.arn}:*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = var.rds_master_password_secret_arn != "" ? [var.rds_master_password_secret_arn] : []
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Effect = "Allow"
+          Action = [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchGetImage",
+            "ecr:GetDownloadUrlForLayer"
+          ]
+          Resource = "*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+          Resource = "${aws_cloudwatch_log_group.bastion.arn}:*"
+        }
+      ],
+      var.rds_master_password_secret_arn != "" ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "secretsmanager:GetSecretValue"
+          ]
+          Resource = [var.rds_master_password_secret_arn]
+        }
+      ] : []
+    )
   })
 }
 
@@ -99,40 +103,44 @@ resource "aws_iam_role_policy" "bastion_ssm_policy" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ssmmessages:CreateControlChannel",
-          "ssmmessages:CreateDataChannel",
-          "ssmmessages:OpenControlChannel",
-          "ssmmessages:OpenDataChannel"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2messages:GetMessages"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = var.rds_master_password_secret_arn != "" ? [var.rds_master_password_secret_arn] : []
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "${aws_cloudwatch_log_group.bastion.arn}:*"
-      }
-    ]
+    Statement = concat(
+      [
+        {
+          Effect = "Allow"
+          Action = [
+            "ssmmessages:CreateControlChannel",
+            "ssmmessages:CreateDataChannel",
+            "ssmmessages:OpenControlChannel",
+            "ssmmessages:OpenDataChannel"
+          ]
+          Resource = "*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "ec2messages:GetMessages"
+          ]
+          Resource = "*"
+        },
+        {
+          Effect = "Allow"
+          Action = [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ]
+          Resource = "${aws_cloudwatch_log_group.bastion.arn}:*"
+        }
+      ],
+      var.rds_master_password_secret_arn != "" ? [
+        {
+          Effect = "Allow"
+          Action = [
+            "secretsmanager:GetSecretValue"
+          ]
+          Resource = [var.rds_master_password_secret_arn]
+        }
+      ] : []
+    )
   })
 }
 
@@ -141,6 +149,8 @@ resource "aws_iam_role_policy" "bastion_ssm_policy" {
 # ========================================
 
 resource "aws_ecs_task_definition" "bastion" {
+  count = var.bastion_image_uri != "" ? 1 : 0
+
   family                   = "${var.project_name}-bastion-${var.environment}"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
@@ -220,9 +230,11 @@ resource "aws_ecs_task_definition" "bastion" {
 # ========================================
 
 resource "aws_ecs_service" "bastion" {
+  count = var.bastion_image_uri != "" ? 1 : 0
+
   name            = "${var.project_name}-bastion-${var.environment}"
   cluster         = var.ecs_cluster_name
-  task_definition = aws_ecs_task_definition.bastion.arn
+  task_definition = aws_ecs_task_definition.bastion[0].arn
   desired_count   = 1
   launch_type     = "FARGATE"
 

@@ -319,10 +319,13 @@ resource "aws_ecs_service" "nextjs" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = var.nextjs_target_group_arn
-    container_name   = "${var.project_name}-nextjs"
-    container_port   = var.nextjs_container_port
+  dynamic "load_balancer" {
+    for_each = var.nextjs_target_group_arn != "" ? [1] : []
+    content {
+      target_group_arn = var.nextjs_target_group_arn
+      container_name   = "${var.project_name}-nextjs"
+      container_port   = var.nextjs_container_port
+    }
   }
 
   depends_on = [
@@ -349,10 +352,13 @@ resource "aws_ecs_service" "go_server" {
     assign_public_ip = false
   }
 
-  load_balancer {
-    target_group_arn = var.go_server_target_group_arn
-    container_name   = "${var.project_name}-go-server"
-    container_port   = var.go_server_container_port
+  dynamic "load_balancer" {
+    for_each = var.go_server_target_group_arn != "" ? [1] : []
+    content {
+      target_group_arn = var.go_server_target_group_arn
+      container_name   = "${var.project_name}-go-server"
+      container_port   = var.go_server_container_port
+    }
   }
 
   depends_on = [
