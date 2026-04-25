@@ -251,8 +251,16 @@ resource "aws_ecs_task_definition" "nextjs" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-      environment = var.nextjs_environment_variables
-      secrets     = var.nextjs_secrets
+      environment = concat(
+        var.nextjs_environment_variables,
+        var.private_alb_dns_name != "" ? [
+          {
+            name  = "NEXT_PUBLIC_API_BASE_URL"
+            value = "http://${var.private_alb_dns_name}"
+          }
+        ] : []
+      )
+      secrets = var.nextjs_secrets
     }
   ])
 
@@ -302,6 +310,92 @@ resource "aws_ecs_task_definition" "go_server" {
 }
 
 # ========================================
+# Generate Task Definition JSON Files for CodeDeploy
+# ========================================
+
+# Generate Next.js Task Definition JSON
+# local_fileリソースを使用して、CodeDeployで使用するタスク定義のJSONファイルを生成
+resource "local_file" "nextjs_taskdef_json" {
+  filename = "${path.module}/../../../../nextjs-taskdef.json"
+  content = jsonencode({
+    family                  = aws_ecs_task_definition.nextjs.family
+    networkMode             = "awsvpc"
+    requiresCompatibilities = ["FARGATE"]
+    cpu                     = tostring(var.nextjs_task_cpu)
+    memory                  = tostring(var.nextjs_task_memory)
+    executionRoleArn        = aws_iam_role.ecs_task_execution_role.arn
+    taskRoleArn             = aws_iam_role.ecs_task_role_nextjs.arn
+    containerDefinitions = [
+      {
+        name      = "${var.project_name}-nextjs"
+        image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
+        essential = true
+        portMappings = [
+          {
+            containerPort = var.nextjs_container_port
+            hostPort      = var.nextjs_container_port
+            protocol      = "tcp"
+          }
+        ]
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            "awslogs-group"         = aws_cloudwatch_log_group.nextjs.name
+            "awslogs-region"        = var.aws_region
+            "awslogs-stream-prefix" = "ecs"
+          }
+        }
+        environment = concat(
+          var.nextjs_environment_variables,
+          var.private_alb_dns_name != "" ? [
+            {
+              name  = "NEXT_PUBLIC_API_BASE_URL"
+              value = "http://${var.private_alb_dns_name}"
+            }
+          ] : []
+        )
+      }
+    ]
+  })
+}
+
+# Generate Go Server Task Definition JSON
+resource "local_file" "go_server_taskdef_json" {
+  filename = "${path.module}/../../../../go-server-taskdef.json"
+  content = jsonencode({
+    family                  = aws_ecs_task_definition.go_server.family
+    networkMode             = "awsvpc"
+    requiresCompatibilities = ["FARGATE"]
+    cpu                     = tostring(var.go_server_task_cpu)
+    memory                  = tostring(var.go_server_task_memory)
+    executionRoleArn        = aws_iam_role.ecs_task_execution_role.arn
+    taskRoleArn             = aws_iam_role.ecs_task_role_go_server.arn
+    containerDefinitions = [
+      {
+        name      = "${var.project_name}-go-server"
+        image     = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
+        essential = true
+        portMappings = [
+          {
+            containerPort = var.go_server_container_port
+            hostPort      = var.go_server_container_port
+            protocol      = "tcp"
+          }
+        ]
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            "awslogs-group"         = aws_cloudwatch_log_group.go_server.name
+            "awslogs-region"        = var.aws_region
+            "awslogs-stream-prefix" = "ecs"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# ========================================
 # ECS Services
 # ========================================
 
@@ -319,13 +413,20 @@ resource "aws_ecs_service" "nextjs" {
     assign_public_ip = false
   }
 
-  dynamic "load_balancer" {
-    for_each = var.nextjs_target_group_arn != "" ? [1] : []
-    content {
-      target_group_arn = var.nextjs_target_group_arn
-      container_name   = "${var.project_name}-nextjs"
-      container_port   = var.nextjs_container_port
-    }
+  load_balancer {
+    target_group_arn = var.nextjs_target_group_arn
+    container_name   = "${var.project_name}-nextjs"
+    container_port   = var.nextjs_container_port
+  }
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
+  # CODE_DEPLOY deployment controller では、Terraformがタスク定義やdesired_countを
+  # 直接更新できないため、CodeDeployで管理される変更は無視する
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
   }
 
   depends_on = [
@@ -346,19 +447,26 @@ resource "aws_ecs_service" "go_server" {
   desired_count   = var.go_server_desired_count
   launch_type     = "FARGATE"
 
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
   network_configuration {
     subnets          = var.private_api_subnet_ids
     security_groups  = [var.go_server_security_group_id]
     assign_public_ip = false
   }
 
-  dynamic "load_balancer" {
-    for_each = var.go_server_target_group_arn != "" ? [1] : []
-    content {
-      target_group_arn = var.go_server_target_group_arn
-      container_name   = "${var.project_name}-go-server"
-      container_port   = var.go_server_container_port
-    }
+  load_balancer {
+    target_group_arn = var.go_server_target_group_arn
+    container_name   = "${var.project_name}-go-server"
+    container_port   = var.go_server_container_port
+  }
+
+  # CODE_DEPLOY deployment controller では、Terraformがタスク定義やdesired_countを
+  # 直接更新できないため、CodeDeployで管理される変更は無視する
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
   }
 
   depends_on = [

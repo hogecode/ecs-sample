@@ -163,6 +163,28 @@ module "ecr" {
 # ========================================
 # Phase 4: ECS Configuration
 # ========================================
+
+# Construct NextJS environment variables with dynamic ALB DNS reference
+locals {
+  nextjs_environment_variables_merged = concat(
+    [
+      {
+        name  = "NEXT_PUBLIC_API_BASE_URL"
+        value = "http://${module.alb.private_alb_dns_name}"
+      },
+      {
+        name  = "API_BASE_URL"
+        value = "http://${module.alb.private_alb_dns_name}"
+      },
+      {
+        name  = "NODE_ENV"
+        value = "production"
+      }
+    ],
+    var.nextjs_environment_variables
+  )
+}
+
 module "ecs" {
   source = "./modules/compute/ecs"
 
@@ -196,6 +218,12 @@ module "ecs" {
   # Load Balancer Target Groups
   nextjs_target_group_arn   = module.alb.nextjs_target_group_arn
   go_server_target_group_arn = module.alb.go_server_target_group_arn
+
+  # Internal Communication Configuration
+  private_alb_dns_name = module.alb.private_alb_dns_name
+
+  # NextJS Environment Variables (with dynamic ALB DNS reference)
+  nextjs_environment_variables = local.nextjs_environment_variables_merged
 
   depends_on = [module.vpc, module.security_group, module.alb, module.ecr]
 }
@@ -349,14 +377,22 @@ module "cicd" {
   github_branch_develop    = "develop"
   github_branch_main       = "main"
 
-  # ECS Configuration
-  ecs_cluster_name         = try(module.ecs.this_cluster_name, module.ecs.cluster_name, "")
-  ecs_service_name         = try(module.ecs.this_service_name, module.ecs.service_name, "")
-  ecs_task_definition_family = "ecs-sample"
+  # ECS Configuration - NextJS Service
+  ecs_nextjs_cluster_name  = "${var.project_name}-cluster-${var.environment}"
+  ecs_nextjs_service_name  = "${var.project_name}-nextjs-service"
 
+  # ECS Configuration - Go Server Service
+  ecs_go_cluster_name      = "${var.project_name}-cluster-${var.environment}"
+  ecs_go_service_name      = "${var.project_name}-go-server-service"
+
+  ecr_nextjs_repository_name     = var.ecr_nextjs_repository_name
+  ecr_go_server_repository_name  = var.ecr_go_server_repository_name
+  
   # ALB Configuration
-  alb_target_group_arn     = try(module.alb.target_group_arn, "")
-  alb_target_group_name    = try(module.alb.target_group_name, "")
+  alb_target_group_arn      = try(module.alb.target_group_arn, "")
+  alb_target_group_name     = try(module.alb.target_group_name, "")
+  alb_nextjs_listener_arn   = try(module.alb.public_alb_http_listener_arn, "")
+  alb_go_listener_arn       = try(module.alb.private_alb_http_listener_arn, "")
 
   # Artifact Storage
   artifact_bucket_name     = module.storage.app_filesystem_bucket_name

@@ -274,3 +274,30 @@ resource "aws_security_group_rule" "redis_from_go_server" {
   security_group_id        = module.redis_sg.security_group_id
   description              = "Redis from Go Server"
 }
+
+# ========================================
+# VPC Endpoints Security Group Rules
+# ========================================
+# ECS tasks need to access VPC Endpoints for ECR, Secrets Manager, CloudWatch Logs, etc.
+
+# VPC Endpoints <- Next.js ECS
+resource "aws_security_group_rule" "vpc_endpoints_from_nextjs" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = module.nextjs_sg.security_group_id
+  security_group_id        = module.vpc_endpoints_sg.security_group_id
+  description              = "HTTPS from Next.js ECS for VPC Endpoints"
+}
+
+# VPC Endpoints <- Go Server ECS
+resource "aws_security_group_rule" "vpc_endpoints_from_go_server" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = module.go_server_sg.security_group_id
+  security_group_id        = module.vpc_endpoints_sg.security_group_id
+  description              = "HTTPS from Go Server ECS for VPC Endpoints"
+}

@@ -246,3 +246,13 @@ variable "go_server_target_group_arn" {
   description = "ARN of the target group for Go Server ALB"
   type        = string
 }
+
+# ========================================
+# Internal Communication Configuration
+# ========================================
+
+variable "private_alb_dns_name" {
+  description = "Private ALB DNS name for internal service communication"
+  type        = string
+  default     = ""
+}

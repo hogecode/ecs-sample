@@ -293,13 +293,13 @@ variable "ecr_repository_name" {
 variable "ecr_nextjs_repository_name" {
   description = "ECR repository name for Next.js frontend service"
   type        = string
-  default     = "ecs-sample-nextjs"
+  default     = "ecs-nextjs"
 }
 
 variable "ecr_go_server_repository_name" {
   description = "ECR repository name for Go server backend service"
   type        = string
-  default     = "ecs-sample-server"
+  default     = "ecs-go-server"
 }
 
 variable "ecr_image_scan_on_push" {
@@ -554,6 +554,19 @@ variable "kms_deletion_window_days" {
     condition     = var.kms_deletion_window_days >= 7 && var.kms_deletion_window_days <= 30
     error_message = "KMS deletion window must be between 7 and 30 days."
   }
+}
+
+# ========================================
+# Next.js Environment Variables Configuration
+# ========================================
+
+variable "nextjs_environment_variables" {
+  description = "Additional environment variables for Next.js container (ALB DNS is auto-configured)"
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
 }
 
 # ========================================
