@@ -1,0 +1,14 @@
+version: 0.0
+
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "<TASK_DEFINITION>"
+        LoadBalancerInfo:
+          ContainerName: "ecs-sample-go-server"
+          ContainerPort: 8080
+
+Hooks:
+  - BeforeAllowTraffic: "CodeDeployHook_BeforeAllowTraffic"
+  - AfterAllowTraffic: "CodeDeployHook_AfterAllowTraffic"

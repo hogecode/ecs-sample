@@ -618,7 +618,7 @@ resource "aws_codepipeline" "pipeline" {
         configuration = {
           ApplicationName     = aws_codedeploy_app.app.name
           DeploymentGroupName = aws_codedeploy_deployment_group.nextjs_deployment_group[0].deployment_group_name
-          AppSpecTemplateArtifact = "appspec.yaml"
+          AppSpecTemplateArtifact = "appspec-nextjs.yaml"
           TaskDefinitionTemplateArtifact = "nextjs-taskdef.json"
         }
       }
@@ -645,7 +645,7 @@ resource "aws_codepipeline" "pipeline" {
         configuration = {
           ApplicationName     = aws_codedeploy_app.app.name
           DeploymentGroupName = aws_codedeploy_deployment_group.go_deployment_group[0].deployment_group_name
-          AppSpecTemplateArtifact = "appspec.yaml"
+          AppSpecTemplateArtifact = "appspec-go-server.yaml"
           TaskDefinitionTemplateArtifact = "go-server-taskdef.json"
         }
       }
@@ -653,6 +653,26 @@ resource "aws_codepipeline" "pipeline" {
   }
 
   tags = var.common_tags
+}
+
+# ========================================
+# AppSpec Files for Each Service
+# ========================================
+
+resource "local_file" "appspec_nextjs" {
+  filename = "${path.root}/appspec-nextjs.yaml"
+  content  = templatefile("${path.module}/appspec-nextjs.yaml.tpl", {
+    container_name = "ecs-sample-nextjs"
+    container_port = 3000
+  })
+}
+
+resource "local_file" "appspec_go_server" {
+  filename = "${path.root}/appspec-go-server.yaml"
+  content  = templatefile("${path.module}/appspec-go-server.yaml.tpl", {
+    container_name = "ecs-sample-go-server"
+    container_port = 8080
+  })
 }
 
 # ========================================

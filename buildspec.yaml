@@ -54,13 +54,6 @@ phases:
       - echo "Build completed successfully"
       - echo "=========================================="
 
-artifacts:
-  files:
-    - appspec.yaml
-    - nextjs-taskdef.json
-    - go-server-taskdef.json
-  name: BuildArtifact
-
 cache:
   paths:
     - '/root/.docker/**/*'
