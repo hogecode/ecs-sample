@@ -161,7 +161,7 @@ resource "aws_vpc_endpoint" "secrets_manager" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-secretsmanager-endpoint-${var.environment}"
@@ -175,7 +175,7 @@ resource "aws_vpc_endpoint" "logs" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-logs-endpoint-${var.environment}"
@@ -189,7 +189,7 @@ resource "aws_vpc_endpoint" "ecr_api" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-ecr-api-endpoint-${var.environment}"
@@ -203,8 +203,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  # NOTICE: サブネットは1つだけ使用
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-ecr-dkr-endpoint-${var.environment}"
@@ -218,7 +217,7 @@ resource "aws_vpc_endpoint" "monitoring" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-monitoring-endpoint-${var.environment}"
@@ -232,7 +231,7 @@ resource "aws_vpc_endpoint" "ssm" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-ssm-endpoint-${var.environment}"
@@ -246,7 +245,7 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-ssmmessages-endpoint-${var.environment}"
@@ -260,7 +259,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-ec2messages-endpoint-${var.environment}"
@@ -274,8 +273,7 @@ resource "aws_vpc_endpoint" "sqs" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-
-  subnet_ids = slice(module.vpc.private_subnets, 0, 1)
+  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
 
   tags = {
     Name = "${var.project_name}-sqs-endpoint-${var.environment}"
