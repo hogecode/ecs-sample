@@ -251,8 +251,16 @@ resource "aws_ecs_task_definition" "nextjs" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-      environment = var.nextjs_environment_variables
-      secrets     = var.nextjs_secrets
+      environment = concat(
+        var.nextjs_environment_variables,
+        var.private_alb_dns_name != "" ? [
+          {
+            name  = "PRIVATE_ALB_DNS_NAME"
+            value = var.private_alb_dns_name
+          }
+        ] : []
+      )
+      secrets = var.nextjs_secrets
     }
   ])
 

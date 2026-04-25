@@ -219,6 +219,9 @@ module "ecs" {
   nextjs_target_group_arn   = module.alb.nextjs_target_group_arn
   go_server_target_group_arn = module.alb.go_server_target_group_arn
 
+  # Internal Communication Configuration
+  private_alb_dns_name = module.alb.private_alb_dns_name
+
   # NextJS Environment Variables (with dynamic ALB DNS reference)
   nextjs_environment_variables = local.nextjs_environment_variables_merged
 
