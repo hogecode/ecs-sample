@@ -315,6 +315,8 @@ resource "local_file" "nextjs_taskdef_json" {
     requiresCompatibilities  = ["FARGATE"]
     cpu                      = tostring(var.nextjs_task_cpu)
     memory                   = tostring(var.nextjs_task_memory)
+    executionRoleArn         = aws_iam_role.ecs_task_execution_role.arn
+    taskRoleArn              = aws_iam_role.ecs_task_role_nextjs.arn
     containerDefinitions = [
       {
         name      = "${var.project_name}-nextjs"
@@ -349,6 +351,8 @@ resource "local_file" "go_server_taskdef_json" {
     requiresCompatibilities  = ["FARGATE"]
     cpu                      = tostring(var.go_server_task_cpu)
     memory                   = tostring(var.go_server_task_memory)
+    executionRoleArn         = aws_iam_role.ecs_task_execution_role.arn
+    taskRoleArn              = aws_iam_role.ecs_task_role_go_server.arn
     containerDefinitions = [
       {
         name      = "${var.project_name}-go-server"
