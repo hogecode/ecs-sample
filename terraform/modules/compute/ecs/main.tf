@@ -226,8 +226,6 @@ resource "aws_ecs_task_definition" "nextjs" {
   family                   = "${var.project_name}-nextjs"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = var.nextjs_task_cpu
-  memory                   = var.nextjs_task_memory
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role_nextjs.arn
 
@@ -236,8 +234,6 @@ resource "aws_ecs_task_definition" "nextjs" {
        name      = "${var.project_name}-nextjs"
        image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
        essential = true
-       cpu       = var.nextjs_task_cpu
-       memory    = var.nextjs_task_memory
        portMappings = [
          {
            containerPort = var.nextjs_container_port
@@ -286,8 +282,6 @@ resource "aws_ecs_task_definition" "go_server" {
       name      = "${var.project_name}-go-server"
       image     = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
       essential = true
-      cpu       = var.go_server_task_cpu
-      memory    = var.go_server_task_memory
       portMappings = [
         {
           containerPort = var.go_server_container_port
