@@ -226,41 +226,43 @@ resource "aws_ecs_task_definition" "nextjs" {
   family                   = "${var.project_name}-nextjs"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
+  cpu                      = var.nextjs_task_cpu
+  memory                   = var.nextjs_task_memory
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role_nextjs.arn
 
-   container_definitions = jsonencode([
-     {
-       name      = "${var.project_name}-nextjs"
-       image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
-       essential = true
-       portMappings = [
-         {
-           containerPort = var.nextjs_container_port
-           hostPort      = var.nextjs_container_port
-           protocol      = "tcp"
-         }
-       ]
-       logConfiguration = {
-         logDriver = "awslogs"
-         options = {
-           "awslogs-group"         = aws_cloudwatch_log_group.nextjs.name
-           "awslogs-region"        = var.aws_region
-           "awslogs-stream-prefix" = "ecs"
-         }
-       }
-       environment = concat(
-         var.nextjs_environment_variables,
-         var.private_alb_dns_name != "" ? [
-           {
-             name  = "NEXT_PUBLIC_API_BASE_URL"
-             value = "http://${var.private_alb_dns_name}"
-           }
-         ] : []
-       )
-       secrets = var.nextjs_secrets
-     }
-   ])
+  container_definitions = jsonencode([
+    {
+      name      = "${var.project_name}-nextjs"
+      image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
+      essential = true
+      portMappings = [
+        {
+          containerPort = var.nextjs_container_port
+          hostPort      = var.nextjs_container_port
+          protocol      = "tcp"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.nextjs.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+      environment = concat(
+        var.nextjs_environment_variables,
+        var.private_alb_dns_name != "" ? [
+          {
+            name  = "NEXT_PUBLIC_API_BASE_URL"
+            value = "http://${var.private_alb_dns_name}"
+          }
+        ] : []
+      )
+      secrets = var.nextjs_secrets
+    }
+  ])
 
   tags = {
     Name = "${var.project_name}-nextjs-task-${var.environment}"
@@ -316,13 +318,13 @@ resource "aws_ecs_task_definition" "go_server" {
 resource "local_file" "nextjs_taskdef_json" {
   filename = "${path.module}/../../../../nextjs-taskdef.json"
   content = jsonencode({
-    family                   = aws_ecs_task_definition.nextjs.family
-    networkMode              = "awsvpc"
-    requiresCompatibilities  = ["FARGATE"]
-    cpu                      = tostring(var.nextjs_task_cpu)
-    memory                   = tostring(var.nextjs_task_memory)
-    executionRoleArn         = aws_iam_role.ecs_task_execution_role.arn
-    taskRoleArn              = aws_iam_role.ecs_task_role_nextjs.arn
+    family                  = aws_ecs_task_definition.nextjs.family
+    networkMode             = "awsvpc"
+    requiresCompatibilities = ["FARGATE"]
+    cpu                     = tostring(var.nextjs_task_cpu)
+    memory                  = tostring(var.nextjs_task_memory)
+    executionRoleArn        = aws_iam_role.ecs_task_execution_role.arn
+    taskRoleArn             = aws_iam_role.ecs_task_role_nextjs.arn
     containerDefinitions = [
       {
         name      = "${var.project_name}-nextjs"
@@ -361,13 +363,13 @@ resource "local_file" "nextjs_taskdef_json" {
 resource "local_file" "go_server_taskdef_json" {
   filename = "${path.module}/../../../../go-server-taskdef.json"
   content = jsonencode({
-    family                   = aws_ecs_task_definition.go_server.family
-    networkMode              = "awsvpc"
-    requiresCompatibilities  = ["FARGATE"]
-    cpu                      = tostring(var.go_server_task_cpu)
-    memory                   = tostring(var.go_server_task_memory)
-    executionRoleArn         = aws_iam_role.ecs_task_execution_role.arn
-    taskRoleArn              = aws_iam_role.ecs_task_role_go_server.arn
+    family                  = aws_ecs_task_definition.go_server.family
+    networkMode             = "awsvpc"
+    requiresCompatibilities = ["FARGATE"]
+    cpu                     = tostring(var.go_server_task_cpu)
+    memory                  = tostring(var.go_server_task_memory)
+    executionRoleArn        = aws_iam_role.ecs_task_execution_role.arn
+    taskRoleArn             = aws_iam_role.ecs_task_role_go_server.arn
     containerDefinitions = [
       {
         name      = "${var.project_name}-go-server"
@@ -421,6 +423,12 @@ resource "aws_ecs_service" "nextjs" {
     type = "CODE_DEPLOY"
   }
 
+  # CODE_DEPLOY deployment controller では、Terraformがタスク定義やdesired_countを
+  # 直接更新できないため、CodeDeployで管理される変更は無視する
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
+  }
+
   depends_on = [
     aws_iam_role_policy.ecs_task_execution_custom,
     aws_iam_role_policy.ecs_task_role_nextjs
@@ -453,6 +461,12 @@ resource "aws_ecs_service" "go_server" {
     target_group_arn = var.go_server_target_group_arn
     container_name   = "${var.project_name}-go-server"
     container_port   = var.go_server_container_port
+  }
+
+  # CODE_DEPLOY deployment controller では、Terraformがタスク定義やdesired_countを
+  # 直接更新できないため、CodeDeployで管理される変更は無視する
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
   }
 
   depends_on = [
