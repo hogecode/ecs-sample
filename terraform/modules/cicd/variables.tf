@@ -56,13 +56,13 @@ variable "github_token" {
 variable "ecr_nextjs_repository_name" {
   description = "ECR repository name for Next.js application"
   type        = string
-  default     = "ecs-sample-nextjs"
+  default     = "ecs-nextjs"
 }
 
 variable "ecr_go_server_repository_name" {
   description = "ECR repository name for Go Server"
   type        = string
-  default     = "ecs-sample-server"
+  default     = "ecs-go-server"
 }
 
 variable "ecs_cluster_name" {

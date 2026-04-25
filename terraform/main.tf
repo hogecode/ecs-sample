@@ -354,6 +354,9 @@ module "cicd" {
   ecs_service_name         = try(module.ecs.this_service_name, module.ecs.service_name, "")
   ecs_task_definition_family = "ecs-sample"
 
+  ecr_nextjs_repository_name     = var.ecr_nextjs_repository_name
+  ecr_go_server_repository_name  = var.ecr_go_server_repository_name
+  
   # ALB Configuration
   alb_target_group_arn     = try(module.alb.target_group_arn, "")
   alb_target_group_name    = try(module.alb.target_group_name, "")
