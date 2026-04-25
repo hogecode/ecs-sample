@@ -422,7 +422,7 @@ resource "aws_codepipeline" "pipeline" {
           Repo   = var.github_repo
           Branch = var.environment == "prod" ? var.github_branch_main : var.github_branch_develop
           OAuthToken = var.github_token
-          PollForSourceChanges = "false"
+          PollForSourceChanges = "false" # falseの場合はGitHub Webhookでトリガーされる。trueの場合は定期的にGitHubをポーリングして変更を検出する。
         }
       }
     }
