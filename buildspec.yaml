@@ -10,7 +10,7 @@ phases:
   pre_build:
     commands:
       - echo "=========================================="
-      - echo "Phase: Pre-Build - AWS ECR Login"
+      - echo "Phase Pre-Build AWS ECR Login"
       - echo "=========================================="
       - "echo \"Logging in to ECR at $(date)\""
       - "aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
@@ -18,14 +18,14 @@ phases:
       - "GO_SERVER_REPO_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$GO_SERVER_REPO_NAME"
       - "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)"
       - "IMAGE_TAG=${COMMIT_HASH:=latest}"
-      - "echo \"Next.js Repository URI: $NEXTJS_REPO_URI\""
-      - "echo \"Go Server Repository URI: $GO_SERVER_REPO_URI\""
-      - "echo \"Image Tag: $IMAGE_TAG\""
+      - "echo \"Next.js Repository URI - $NEXTJS_REPO_URI\""
+      - "echo \"Go Server Repository URI - $GO_SERVER_REPO_URI\""
+      - "echo \"Image Tag - $IMAGE_TAG\""
 
   build:
     commands:
       - echo "=========================================="
-      - echo "Phase: Build - Docker Images Build"
+      - echo "Phase Build Docker Images Build"
       - echo "=========================================="
       - "echo \"Building Next.js Docker image on $(date)\""
       - "docker build -t $NEXTJS_REPO_URI:$IMAGE_TAG -t $NEXTJS_REPO_URI:latest ./web"
@@ -39,7 +39,7 @@ phases:
   post_build:
     commands:
       - echo "=========================================="
-      - echo "Phase: Post-Build - Push to ECR"
+      - echo "Phase Post-Build Push to ECR"
       - echo "=========================================="
       - "echo \"Pushing Next.js Docker image to ECR on $(date)\""
       - "docker push $NEXTJS_REPO_URI:$IMAGE_TAG"

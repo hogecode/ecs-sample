@@ -9,7 +9,7 @@ phases:
   pre_build:
     commands:
       - echo "=========================================="
-      - echo "Phase: Pre-Build - Trivy Installation"
+      - echo "Phase Pre-Build Trivy Installation"
       - echo "=========================================="
       - "echo \"Installing Trivy on $(date)\""
       - apt-get update -y
@@ -24,13 +24,13 @@ phases:
   build:
     commands:
       - echo "=========================================="
-      - echo "Phase: Build - Security Scan with Trivy"
+      - echo "Phase Build Security Scan with Trivy"
       - echo "=========================================="
       - "echo \"Scanning Docker image for vulnerabilities on $(date)\""
       - "REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME"
       - "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)"
       - "IMAGE_TAG=${COMMIT_HASH:=latest}"
-      - "echo \"Scanning image: $REPOSITORY_URI:$IMAGE_TAG\""
+      - "echo \"Scanning image - $REPOSITORY_URI:$IMAGE_TAG\""
       - "trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output scan-results.json $REPOSITORY_URI:$IMAGE_TAG"
       - "trivy image --severity HIGH,CRITICAL --exit-code 0 $REPOSITORY_URI:$IMAGE_TAG"
       - "echo \"Running severity check...\""
@@ -48,7 +48,7 @@ phases:
   post_build:
     commands:
       - echo "=========================================="
-      - echo "Phase: Post-Build - Scan Complete"
+      - echo "Phase Post-Build Scan Complete"
       - echo "=========================================="
       - echo "Scan completed successfully on $(date)"
       - ls -la scan-results.json
