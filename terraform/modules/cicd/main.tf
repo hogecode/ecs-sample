@@ -70,7 +70,7 @@ resource "aws_iam_role_policy" "codebuild_policy" {
           "ecr:CompleteLayerUpload",
           "ecr:DescribeRepositories",
           "ecr:ListImages",
-          "ecr:BatchCheckLayerAvailability"
+          "ecr:BatchCheckLayerAvailability" # この権限がないと403エラーでdocker pushが失敗する
         ]
         Resource = [
           "arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/${var.ecr_nextjs_repository_name}",
@@ -317,7 +317,7 @@ resource "aws_codebuild_project" "scan_project" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = "buildspec.yaml"
+    buildspec = "buildspec-scan.yaml"
   }
 
   logs_config {
