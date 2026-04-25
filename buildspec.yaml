@@ -49,13 +49,6 @@ phases:
       - "docker push $GO_SERVER_REPO_URI:$IMAGE_TAG"
       - "docker push $GO_SERVER_REPO_URI:latest"
       - echo "Go Server Docker image pushed successfully"
-      - echo "Generating imagedefinitions.json for ECS deployment"
-      - |
-        printf '[
-          {"name":"nextjs-container","imageUri":"%s"},
-          {"name":"go-server-container","imageUri":"%s"}
-        ]' $NEXTJS_REPO_URI:$IMAGE_TAG $GO_SERVER_REPO_URI:$IMAGE_TAG > imagedefinitions.json
-      - cat imagedefinitions.json
       
       - echo "=========================================="
       - echo "Build completed successfully"
@@ -63,7 +56,9 @@ phases:
 
 artifacts:
   files:
-    - imagedefinitions.json
+    - appspec.yaml
+    - nextjs-taskdef.json
+    - go-server-taskdef.json
   name: BuildArtifact
 
 cache:

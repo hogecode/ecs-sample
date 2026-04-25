@@ -37,9 +37,34 @@ output "codedeploy_app_name" {
   value       = aws_codedeploy_app.app.name
 }
 
-output "codedeploy_deployment_group_name" {
-  description = "Name of the CodeDeploy deployment group"
-  value       = try(aws_codedeploy_deployment_group.deployment_group[0].deployment_group_name, "")
+output "codedeploy_nextjs_deployment_group_name" {
+  description = "Name of the Next.js CodeDeploy deployment group"
+  value       = try(aws_codedeploy_deployment_group.nextjs_deployment_group[0].deployment_group_name, "")
+}
+
+output "codedeploy_nextjs_deployment_group_arn" {
+  description = "ARN of the Next.js CodeDeploy deployment group"
+  value       = try(aws_codedeploy_deployment_group.nextjs_deployment_group[0].arn, "")
+}
+
+output "codedeploy_nextjs_deployment_group_id" {
+  description = "ID of the Next.js CodeDeploy deployment group"
+  value       = try(aws_codedeploy_deployment_group.nextjs_deployment_group[0].deployment_group_id, "")
+}
+
+output "codedeploy_go_deployment_group_name" {
+  description = "Name of the Go Server CodeDeploy deployment group"
+  value       = try(aws_codedeploy_deployment_group.go_deployment_group[0].deployment_group_name, "")
+}
+
+output "codedeploy_go_deployment_group_arn" {
+  description = "ARN of the Go Server CodeDeploy deployment group"
+  value       = try(aws_codedeploy_deployment_group.go_deployment_group[0].arn, "")
+}
+
+output "codedeploy_go_deployment_group_id" {
+  description = "ID of the Go Server CodeDeploy deployment group"
+  value       = try(aws_codedeploy_deployment_group.go_deployment_group[0].deployment_group_id, "")
 }
 
 output "codebuild_role_arn" {

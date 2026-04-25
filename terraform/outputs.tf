@@ -130,6 +130,15 @@ output "go_server_target_group_arn" {
   value       = module.alb.go_server_target_group_arn
 }
 
+output "target_group_arn" {
+  description = "Target group ARN (alias for nextjs_target_group_arn)"
+  value       = module.alb.target_group_arn
+}
+
+output "target_group_name" {
+  description = "Target group name (alias for nextjs_target_group_name)"
+  value       = module.alb.target_group_name
+}
 
 # ========================================
 # Phase 4: ECS Configuration

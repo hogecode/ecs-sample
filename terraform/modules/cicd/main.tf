@@ -379,10 +379,11 @@ resource "aws_codedeploy_app" "app" {
   tags = var.common_tags
 }
 
-resource "aws_codedeploy_deployment_group" "deployment_group" {
-  count                  = var.alb_target_group_arn != "" ? 1 : 0
+# NextJS Deployment Group
+resource "aws_codedeploy_deployment_group" "nextjs_deployment_group" {
+  count                  = var.ecs_nextjs_cluster_name != "" && var.ecs_nextjs_service_name != "" ? 1 : 0
   app_name               = aws_codedeploy_app.app.name
-  deployment_group_name  = local.codedeploy_group_name
+  deployment_group_name  = "${local.codedeploy_group_name}-nextjs"
   deployment_config_name = var.environment == "prod" ? "CodeDeployDefault.ECSCanary10Percent5Minutes" : "CodeDeployDefault.ECSAllAtOnce"
   service_role_arn       = aws_iam_role.codedeploy_role.arn
 
@@ -393,17 +394,97 @@ resource "aws_codedeploy_deployment_group" "deployment_group" {
 
   deployment_style {
     deployment_type   = "BLUE_GREEN"
-    deployment_option = var.environment == "prod" ? "WITH_TRAFFIC_CONTROL" : "WITH_TRAFFIC_CONTROL"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
   }
 
-  # Load Balancer Info is required for ECS deployments
-  load_balancer_info {
-    target_group_info {
-      name = var.alb_target_group_name
+  ecs_service {
+    cluster_name = var.ecs_nextjs_cluster_name
+    service_name = var.ecs_nextjs_service_name
+  }
+
+  blue_green_deployment_config {
+    deployment_ready_option {
+      action_on_timeout    = "CONTINUE_DEPLOYMENT"
+      wait_time_in_minutes = 0
+    }
+
+    terminate_blue_instances_on_deployment_success {
+      action                           = "TERMINATE"
+      termination_wait_time_in_minutes = 0
     }
   }
 
-  tags = var.common_tags
+  load_balancer_info {
+    target_group_pair_info {
+      prod_traffic_route {
+        listener_arns = var.alb_nextjs_listener_arn != "" ? [var.alb_nextjs_listener_arn] : [""]
+      }
+
+      target_group {
+        name = "${var.project_name}-nextjs-blue-${var.environment}"
+      }
+
+      target_group {
+        name = "${var.project_name}-nextjs-green-${var.environment}"
+      }
+    }
+  }
+
+  tags = merge(var.common_tags, { Service = "nextjs" })
+}
+
+# Go Server Deployment Group
+resource "aws_codedeploy_deployment_group" "go_deployment_group" {
+  count                  = var.ecs_go_cluster_name != "" && var.ecs_go_service_name != "" ? 1 : 0
+  app_name               = aws_codedeploy_app.app.name
+  deployment_group_name  = "${local.codedeploy_group_name}-go"
+  deployment_config_name = var.environment == "prod" ? "CodeDeployDefault.ECSCanary10Percent5Minutes" : "CodeDeployDefault.ECSAllAtOnce"
+  service_role_arn       = aws_iam_role.codedeploy_role.arn
+
+  auto_rollback_configuration {
+    enabled = true
+    events  = ["DEPLOYMENT_FAILURE", "DEPLOYMENT_STOP_ON_ALARM"]
+  }
+
+  deployment_style {
+    deployment_type   = "BLUE_GREEN"
+    deployment_option = "WITH_TRAFFIC_CONTROL"
+  }
+
+  ecs_service {
+    cluster_name = var.ecs_go_cluster_name
+    service_name = var.ecs_go_service_name
+  }
+
+  blue_green_deployment_config {
+    deployment_ready_option {
+      action_on_timeout    = "CONTINUE_DEPLOYMENT"
+      wait_time_in_minutes = 0
+    }
+
+    terminate_blue_instances_on_deployment_success {
+      action                           = "TERMINATE"
+      termination_wait_time_in_minutes = 0
+    }
+  }
+
+  load_balancer_info {
+    target_group_pair_info {
+      prod_traffic_route {
+        listener_arns = var.alb_go_listener_arn != "" ? [var.alb_go_listener_arn] : [""]
+      }
+
+      target_group {
+        name = "${var.project_name}-go-server-blue-${var.environment}"
+      }
+
+      target_group {
+        name = "${var.project_name}-go-server-green-${var.environment}"
+      }
+    }
+  }
+
+  tags = merge(var.common_tags, { Service = "go-server" })
 }
 
 # ========================================
@@ -518,24 +599,54 @@ resource "aws_codepipeline" "pipeline" {
   }
 
   # ========================================
-  # Deploy Stage - CodeDeploy
+  # Deploy Stage 1 - Next.js Deployment
   # ========================================
   dynamic "stage" {
-    for_each = var.alb_target_group_arn != "" ? [1] : []
+    for_each = var.ecs_nextjs_cluster_name != "" && var.ecs_nextjs_service_name != "" ? [1] : []
     content {
-      name = "Deploy"
+      name = "DeployNextJS"
 
       action {
-        name            = "DeployAction"
+        name            = "DeployNextJSAction"
         category        = "Deploy"
         owner           = "AWS"
         provider        = "CodeDeployToECS"
         input_artifacts = ["build_output"]
         version         = "1"
+        run_order       = 1
 
         configuration = {
           ApplicationName     = aws_codedeploy_app.app.name
-          DeploymentGroupName = aws_codedeploy_deployment_group.deployment_group[0].deployment_group_name
+          DeploymentGroupName = aws_codedeploy_deployment_group.nextjs_deployment_group[0].deployment_group_name
+          AppSpecTemplateArtifact = "appspec.yaml"
+          TaskDefinitionTemplateArtifact = "nextjs-taskdef.json"
+        }
+      }
+    }
+  }
+
+  # ========================================
+  # Deploy Stage 2 - Go Server Deployment
+  # ========================================
+  dynamic "stage" {
+    for_each = var.ecs_go_cluster_name != "" && var.ecs_go_service_name != "" ? [1] : []
+    content {
+      name = "DeployGoServer"
+
+      action {
+        name            = "DeployGoServerAction"
+        category        = "Deploy"
+        owner           = "AWS"
+        provider        = "CodeDeployToECS"
+        input_artifacts = ["build_output"]
+        version         = "1"
+        run_order       = 2
+
+        configuration = {
+          ApplicationName     = aws_codedeploy_app.app.name
+          DeploymentGroupName = aws_codedeploy_deployment_group.go_deployment_group[0].deployment_group_name
+          AppSpecTemplateArtifact = "appspec.yaml"
+          TaskDefinitionTemplateArtifact = "go-server-taskdef.json"
         }
       }
     }

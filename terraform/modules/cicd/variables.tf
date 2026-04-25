@@ -66,13 +66,41 @@ variable "ecr_go_server_repository_name" {
 }
 
 variable "ecs_cluster_name" {
-  description = "ECS cluster name"
+  description = "ECS cluster name (for backward compatibility, will be deprecated)"
   type        = string
+  default     = ""
 }
 
 variable "ecs_service_name" {
-  description = "ECS service name"
+  description = "ECS service name (for backward compatibility, will be deprecated)"
   type        = string
+  default     = ""
+}
+
+# NextJS Service Configuration
+variable "ecs_nextjs_cluster_name" {
+  description = "ECS cluster name for Next.js service"
+  type        = string
+  default     = ""
+}
+
+variable "ecs_nextjs_service_name" {
+  description = "ECS service name for Next.js service"
+  type        = string
+  default     = ""
+}
+
+# Go Server Service Configuration
+variable "ecs_go_cluster_name" {
+  description = "ECS cluster name for Go Server service"
+  type        = string
+  default     = ""
+}
+
+variable "ecs_go_service_name" {
+  description = "ECS service name for Go Server service"
+  type        = string
+  default     = ""
 }
 
 variable "ecs_task_definition_family" {
@@ -89,6 +117,18 @@ variable "alb_target_group_arn" {
 
 variable "alb_target_group_name" {
   description = "ALB target group name for CodeDeploy configuration"
+  type        = string
+  default     = ""
+}
+
+variable "alb_nextjs_listener_arn" {
+  description = "ALB listener ARN for NextJS Blue/Green deployment"
+  type        = string
+  default     = ""
+}
+
+variable "alb_go_listener_arn" {
+  description = "ALB listener ARN for Go Server Blue/Green deployment"
   type        = string
   default     = ""
 }
@@ -149,6 +189,76 @@ variable "codedeploy_green_fleet_provisioning_option" {
   description = "Describe the instances to be used with the deployment"
   type        = string
   default     = "COPY_AUTO_SCALING_GROUP"
+}
+
+variable "enable_deployment_triggers" {
+  description = "Enable SNS triggers for deployment notifications"
+  type        = bool
+  default     = false
+}
+
+variable "deployment_trigger_sns_topic_arn" {
+  description = "SNS topic ARN for deployment notifications"
+  type        = string
+  default     = ""
+}
+
+variable "enable_alarm_configuration" {
+  description = "Enable CloudWatch alarm configuration for deployments"
+  type        = bool
+  default     = false
+}
+
+variable "alarm_names" {
+  description = "List of CloudWatch alarm names to monitor during deployment"
+  type        = list(string)
+  default     = []
+}
+
+variable "ignore_poll_alarm_failure" {
+  description = "Whether to ignore failure when CloudWatch alarms cannot be polled"
+  type        = bool
+  default     = false
+}
+
+variable "use_target_group_pair_info" {
+  description = "Use target group pair info for more advanced load balancer configuration (recommended for blue/green deployments)"
+  type        = bool
+  default     = false
+}
+
+variable "alb_listener_arns" {
+  description = "List of ALB listener ARNs for target group pair configuration"
+  type        = list(string)
+  default     = []
+}
+
+variable "blue_green_test_traffic_route_listener_arns" {
+  description = "List of ALB listener ARNs for test traffic route in blue/green deployments"
+  type        = list(string)
+  default     = []
+}
+
+variable "codedeploy_deployment_ready_action_on_timeout" {
+  description = "The action to take when new Green instances are ready to receive traffic"
+  type        = string
+  default     = "CONTINUE_DEPLOYMENT"
+  
+  validation {
+    condition     = contains(["CONTINUE_DEPLOYMENT", "STOP_DEPLOYMENT"], var.codedeploy_deployment_ready_action_on_timeout)
+    error_message = "Action must be one of: CONTINUE_DEPLOYMENT, STOP_DEPLOYMENT"
+  }
+}
+
+variable "codedeploy_termination_action" {
+  description = "The action to take on instances in the original environment after a successful blue/green deployment"
+  type        = string
+  default     = "TERMINATE"
+  
+  validation {
+    condition     = contains(["TERMINATE", "KEEP_ALIVE"], var.codedeploy_termination_action)
+    error_message = "Action must be one of: TERMINATE, KEEP_ALIVE"
+  }
 }
 
 variable "common_tags" {
