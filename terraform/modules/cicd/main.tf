@@ -122,18 +122,19 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         ]
         Resource = "arn:aws:s3:::${var.artifact_bucket_name}/*"
       },
-      {
-        Effect = "Allow"
-        Action = [
-          "codebuild:BatchGetBuilds",
-          "codebuild:BatchGetReports",
-          "codebuild:CreateReport",
-          "codebuild:CreateReportGroup",
-          "codebuild:UpdateReport",
-          "codebuild:BatchPutTestReports"
-        ]
-        Resource = "*"
-      },
+       {
+         Effect = "Allow"
+         Action = [
+           "codebuild:StartBuild",
+           "codebuild:BatchGetBuilds",
+           "codebuild:BatchGetReports",
+           "codebuild:CreateReport",
+           "codebuild:CreateReportGroup",
+           "codebuild:UpdateReport",
+           "codebuild:BatchPutTestReports"
+         ]
+         Resource = "*"
+       },
       {
         Effect = "Allow"
         Action = [
