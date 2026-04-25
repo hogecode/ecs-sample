@@ -283,7 +283,7 @@ resource "aws_codebuild_project" "build_project" {
       value = var.ecr_go_server_repository_name
     }
   }
-  
+
   source {
     type      = "CODEPIPELINE"
     buildspec = "buildspec.yaml"
@@ -556,25 +556,25 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 
-   # ========================================
-   # Scan Stage - CodeBuild
-   # ========================================
-   stage {
-     name = "Scan"
+  # ========================================
+  # Scan Stage - CodeBuild
+  # ========================================
+  stage {
+    name = "Scan"
 
-     action {
-       name            = "ScanAction"
-       category        = "Build"
-       owner           = "AWS"
-       provider        = "CodeBuild"
-       input_artifacts = ["source_output"]
-       version         = "1"
+    action {
+      name            = "ScanAction"
+      category        = "Build"
+      owner           = "AWS"
+      provider        = "CodeBuild"
+      input_artifacts = ["source_output"]
+      version         = "1"
 
-       configuration = {
-         ProjectName = aws_codebuild_project.scan_project.name
-       }
-     }
-   }
+      configuration = {
+        ProjectName = aws_codebuild_project.scan_project.name
+      }
+    }
+  }
 
   # ========================================
   # Deploy Stage (Approval for Prod)
@@ -616,10 +616,13 @@ resource "aws_codepipeline" "pipeline" {
         run_order       = 1
 
         configuration = {
-          ApplicationName     = aws_codedeploy_app.app.name
-          DeploymentGroupName = aws_codedeploy_deployment_group.nextjs_deployment_group[0].deployment_group_name
-          AppSpecTemplateArtifact = "appspec-nextjs.yaml"
-          TaskDefinitionTemplateArtifact = "nextjs-taskdef.json"
+          ApplicationName         = aws_codedeploy_app.app.name
+          DeploymentGroupName     = aws_codedeploy_deployment_group.nextjs_deployment_group[0].deployment_group_name
+          AppSpecTemplateArtifact = "build_output"
+          AppSpecTemplatePath     = "appspec-nextjs.yaml"
+
+          TaskDefinitionTemplateArtifact = "build_output"
+          TaskDefinitionTemplatePath     = "nextjs-taskdef.json"
         }
       }
     }
@@ -643,10 +646,13 @@ resource "aws_codepipeline" "pipeline" {
         run_order       = 2
 
         configuration = {
-          ApplicationName     = aws_codedeploy_app.app.name
-          DeploymentGroupName = aws_codedeploy_deployment_group.go_deployment_group[0].deployment_group_name
-          AppSpecTemplateArtifact = "appspec-go-server.yaml"
-          TaskDefinitionTemplateArtifact = "go-server-taskdef.json"
+          ApplicationName                = aws_codedeploy_app.app.name
+          DeploymentGroupName            = aws_codedeploy_deployment_group.go_deployment_group[0].deployment_group_name
+          AppSpecTemplateArtifact        = "build_output"
+          AppSpecTemplatePath            = "appspec-go-server.yaml"
+
+          TaskDefinitionTemplateArtifact = "build_output"
+          TaskDefinitionTemplatePath     = "go-server-taskdef.json"
         }
       }
     }
@@ -661,7 +667,7 @@ resource "aws_codepipeline" "pipeline" {
 
 resource "local_file" "appspec_nextjs" {
   filename = "${path.module}/../../../appspec-nextjs.yaml"
-  content  = templatefile("${path.module}/appspec-nextjs.yaml.tpl", {
+  content = templatefile("${path.module}/appspec-nextjs.yaml.tpl", {
     container_name = "ecs-sample-nextjs"
     container_port = 3000
   })
@@ -669,7 +675,7 @@ resource "local_file" "appspec_nextjs" {
 
 resource "local_file" "appspec_go_server" {
   filename = "${path.module}/../../../appspec-go-server.yaml"
-  content  = templatefile("${path.module}/appspec-go-server.yaml.tpl", {
+  content = templatefile("${path.module}/appspec-go-server.yaml.tpl", {
     container_name = "ecs-sample-go-server"
     container_port = 8080
   })
