@@ -3,7 +3,7 @@
 # ========================================
 # Phase 1: VPC & Network Configuration
 # ========================================
-/* 一時的にコメントアウト
+
 # VPC Outputs
 output "vpc_id" {
   description = "VPC ID"
@@ -145,16 +145,6 @@ output "ecs_cluster_name" {
   value       = module.ecs.ecs_cluster_name
 }
 
-output "nextjs_repository_url" {
-  description = "ECR repository URL for Next.js"
-  value       = module.ecs.nextjs_repository_url
-}
-
-output "go_server_repository_url" {
-  description = "ECR repository URL for Go server"
-  value       = module.ecs.go_server_repository_url
-}
-
 output "nextjs_log_group_name" {
   description = "CloudWatch Log Group name for Next.js"
   value       = module.ecs.nextjs_log_group_name
@@ -235,4 +225,3 @@ output "lambda_functions_summary" {
   description = "Summary of deployed Lambda functions"
   value       = "Deployed ${length(module.lambda_functions)} Lambda function(s): ${join(", ", keys(module.lambda_functions))}"
 }
-*/
