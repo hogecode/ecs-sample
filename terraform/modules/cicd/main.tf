@@ -611,7 +611,7 @@ resource "aws_codepipeline" "pipeline" {
         category        = "Deploy"
         owner           = "AWS"
         provider        = "CodeDeployToECS"
-        input_artifacts = ["build_output"]
+        input_artifacts = ["source_output"]
         version         = "1"
         run_order       = 1
 
