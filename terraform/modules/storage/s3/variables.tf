@@ -29,10 +29,6 @@ variable "caller_identity_account_id" {
   type        = string
 }
 
-variable "certificate_arn" {
-  description = "ACM certificate ARN for CloudFront"
-  type        = string
-}
 
 variable "enable_cloudfront" {
   description = "Enable CloudFront CDN distribution for S3 assets"

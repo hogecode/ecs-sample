@@ -230,7 +230,7 @@ module "bastion_fargate" {
   depends_on = [module.ecs, module.vpc, module.security_group]
 }
 
-/*
+
 # ========================================
 # Phase 5: Storage (S3)
 # ========================================
@@ -241,12 +241,11 @@ module "storage" {
   environment                = var.environment
   domain_name                = var.domain_name
   aws_region                 = var.aws_region
-  certificate_arn            = module.certificates.certificate_arn
   s3_filesystem_kms_key_arn  = module.security_group.s3_filesystem_kms_key_arn
   caller_identity_account_id = data.aws_caller_identity.current.account_id
   common_tags                = local.common_tags
 }
-*/
+
 
 # ========================================
 # Phase 6: RDS Database Configuration
