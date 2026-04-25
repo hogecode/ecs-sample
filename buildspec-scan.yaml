@@ -63,5 +63,5 @@ artifacts:
 # ========================================
 # 環境変数はコードビルドプロジェクトで定義される
 # - AWS_DEFAULT_REGION: ap-northeast-1
-# - AWS_ACCOUNT_ID: 123456789012
-# - IMAGE_REPO_NAME: ecs-sample
+# - AWS_ACCOUNT_ID: 885545925004
+# - IMAGE_REPO_NAME: ecs-nextjs (または ecs-go-server)

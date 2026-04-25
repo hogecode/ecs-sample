@@ -35,12 +35,6 @@ variable "github_repo" {
   default     = "ecs-sample"
 }
 
-variable "github_repository_id" {
-  description = "GitHub repository ID in format 'owner/repo' for CodeBuild source"
-  type        = string
-  default     = "hogecode/ecs-sample"
-}
-
 variable "github_branch_develop" {
   description = "Develop branch for staging deployment"
   type        = string

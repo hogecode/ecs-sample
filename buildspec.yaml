@@ -75,6 +75,6 @@ cache:
 # ========================================
 # 環境変数はコードビルドプロジェクトで定義される
 # - AWS_DEFAULT_REGION: ap-northeast-1
-# - AWS_ACCOUNT_ID: 123456789012
-# - NEXTJS_REPO_NAME: ecs-sample-nextjs (または web)
-# - GO_SERVER_REPO_NAME: ecs-sample-server (または server)
+# - AWS_ACCOUNT_ID: 885545925004
+# - NEXTJS_REPO_NAME: ecs-nextjs
+# - GO_SERVER_REPO_NAME: ecs-go-server

@@ -293,13 +293,13 @@ variable "ecr_repository_name" {
 variable "ecr_nextjs_repository_name" {
   description = "ECR repository name for Next.js frontend service"
   type        = string
-  default     = "ecs-sample-nextjs"
+  default     = "ecs-nextjs"
 }
 
 variable "ecr_go_server_repository_name" {
   description = "ECR repository name for Go server backend service"
   type        = string
-  default     = "ecs-sample-server"
+  default     = "ecs-go-server"
 }
 
 variable "ecr_image_scan_on_push" {
