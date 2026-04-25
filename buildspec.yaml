@@ -49,10 +49,9 @@ phases:
       - "docker push $GO_SERVER_REPO_URI:$IMAGE_TAG"
       - "docker push $GO_SERVER_REPO_URI:latest"
       - echo "Go Server Docker image pushed successfully"
-      
-       - echo "=========================================="
-       - echo "Build completed successfully"
-       - echo "=========================================="
+      - echo "=========================================="
+      - echo "Build completed successfully"
+      - echo "=========================================="
 
 artifacts:
   files:
