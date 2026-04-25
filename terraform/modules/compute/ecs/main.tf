@@ -231,38 +231,40 @@ resource "aws_ecs_task_definition" "nextjs" {
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role_nextjs.arn
 
-  container_definitions = jsonencode([
-    {
-      name      = "${var.project_name}-nextjs"
-      image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
-      essential = true
-      portMappings = [
-        {
-          containerPort = var.nextjs_container_port
-          hostPort      = var.nextjs_container_port
-          protocol      = "tcp"
-        }
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.nextjs.name
-          "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "ecs"
-        }
-      }
-      environment = concat(
-        var.nextjs_environment_variables,
-        var.private_alb_dns_name != "" ? [
-          {
-            name  = "NEXT_PUBLIC_API_BASE_URL"
-            value = "http://${var.private_alb_dns_name}"
-          }
-        ] : []
-      )
-      secrets = var.nextjs_secrets
-    }
-  ])
+   container_definitions = jsonencode([
+     {
+       name      = "${var.project_name}-nextjs"
+       image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
+       essential = true
+       cpu       = var.nextjs_task_cpu
+       memory    = var.nextjs_task_memory
+       portMappings = [
+         {
+           containerPort = var.nextjs_container_port
+           hostPort      = var.nextjs_container_port
+           protocol      = "tcp"
+         }
+       ]
+       logConfiguration = {
+         logDriver = "awslogs"
+         options = {
+           "awslogs-group"         = aws_cloudwatch_log_group.nextjs.name
+           "awslogs-region"        = var.aws_region
+           "awslogs-stream-prefix" = "ecs"
+         }
+       }
+       environment = concat(
+         var.nextjs_environment_variables,
+         var.private_alb_dns_name != "" ? [
+           {
+             name  = "NEXT_PUBLIC_API_BASE_URL"
+             value = "http://${var.private_alb_dns_name}"
+           }
+         ] : []
+       )
+       secrets = var.nextjs_secrets
+     }
+   ])
 
   tags = {
     Name = "${var.project_name}-nextjs-task-${var.environment}"
@@ -284,6 +286,8 @@ resource "aws_ecs_task_definition" "go_server" {
       name      = "${var.project_name}-go-server"
       image     = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
       essential = true
+      cpu       = var.go_server_task_cpu
+      memory    = var.go_server_task_memory
       portMappings = [
         {
           containerPort = var.go_server_container_port
@@ -345,6 +349,15 @@ resource "local_file" "nextjs_taskdef_json" {
             "awslogs-stream-prefix" = "ecs"
           }
         }
+        environment = concat(
+          var.nextjs_environment_variables,
+          var.private_alb_dns_name != "" ? [
+            {
+              name  = "NEXT_PUBLIC_API_BASE_URL"
+              value = "http://${var.private_alb_dns_name}"
+            }
+          ] : []
+        )
       }
     ]
   })

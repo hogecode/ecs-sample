@@ -135,7 +135,7 @@ module "private_alb" {
          unhealthy_threshold = 3
          timeout             = 5
          interval            = 30
-         path                = "/health"
+         path                = "/api/health"
          matcher             = "200-399"
          port                = "traffic-port"
        }
@@ -160,7 +160,7 @@ module "private_alb" {
          unhealthy_threshold = 3
          timeout             = 5
          interval            = 30
-         path                = "/health"
+         path                = "/api/health"
          matcher             = "200-399"
          port                = "traffic-port"
        }
