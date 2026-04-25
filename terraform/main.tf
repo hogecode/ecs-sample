@@ -331,7 +331,7 @@ module "monitoring" {
   depends_on = [module.ecs, module.rds, module.alb, module.kms]
 }
 
-/*
+
 # ========================================
 # Phase 8: CI/CD Pipeline Configuration
 # ========================================
@@ -356,9 +356,10 @@ module "cicd" {
 
   # ALB Configuration
   alb_target_group_arn     = try(module.alb.target_group_arn, "")
+  alb_target_group_name    = try(module.alb.target_group_name, "")
 
   # Artifact Storage
-  artifact_bucket_name     = try(module.storage.alb_logs_bucket_id, "")
+  artifact_bucket_name     = module.storage.app_filesystem_bucket_name
   kms_key_id              = try(module.storage.artifact_bucket_kms_key_id, "")
 
   # CodeBuild Configuration
@@ -404,7 +405,7 @@ module "messaging" {
   app_name           = var.project_name
   environment        = var.environment
   queue_names        = var.sqs_queue_names
-  sqs_kms_key_arn    = var.sqs_kms_key_arn
+  sqs_kms_key_arn    = try(module.storage.artifact_bucket_kms_key_id, "")
   common_tags        = local.common_tags
 }
 
@@ -445,6 +446,6 @@ module "s3_validation_lambda" {
 
   depends_on = [module.storage]
 }
-*/
+
 
 

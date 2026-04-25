@@ -84,6 +84,13 @@ variable "ecs_task_definition_family" {
 variable "alb_target_group_arn" {
   description = "ALB target group ARN for load balancer configuration"
   type        = string
+  default     = ""
+}
+
+variable "alb_target_group_name" {
+  description = "ALB target group name for CodeDeploy configuration"
+  type        = string
+  default     = ""
 }
 
 variable "codebuild_environment_compute_type" {

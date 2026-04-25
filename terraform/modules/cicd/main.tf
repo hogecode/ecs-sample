@@ -192,9 +192,46 @@ resource "aws_iam_role" "codedeploy_role" {
   tags = var.common_tags
 }
 
-resource "aws_iam_role_policy_attachment" "codedeploy_policy" {
-  role       = aws_iam_role.codedeploy_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForECS"
+resource "aws_iam_role_policy" "codedeploy_policy" {
+  name_prefix = "codedeploy-policy-"
+  role        = aws_iam_role.codedeploy_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:*",
+          "elasticloadbalancing:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ecs:*",
+          "servicediscovery:*"
+        ]
+        Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "iam:PassRole"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "iam:PassedToService" = [
+              "ec2.amazonaws.com",
+              "ecs-tasks.amazonaws.com"
+            ]
+          }
+        }
+      }
+    ]
+  })
 }
 
 data "aws_caller_identity" "current" {}
@@ -316,6 +353,7 @@ resource "aws_codedeploy_app" "app" {
 }
 
 resource "aws_codedeploy_deployment_group" "deployment_group" {
+  count                  = var.alb_target_group_arn != "" ? 1 : 0
   app_name               = aws_codedeploy_app.app.name
   deployment_group_name  = local.codedeploy_group_name
   deployment_config_name = var.environment == "prod" ? "CodeDeployDefault.ECSCanary10Percent5Minutes" : "CodeDeployDefault.ECSAllAtOnce"
@@ -329,6 +367,13 @@ resource "aws_codedeploy_deployment_group" "deployment_group" {
   deployment_style {
     deployment_type   = "BLUE_GREEN"
     deployment_option = var.environment == "prod" ? "WITH_TRAFFIC_CONTROL" : "WITH_TRAFFIC_CONTROL"
+  }
+
+  # Load Balancer Info is required for ECS deployments
+  load_balancer_info {
+    target_group_info {
+      name = var.alb_target_group_name
+    }
   }
 
   tags = var.common_tags
@@ -358,23 +403,26 @@ resource "aws_codepipeline" "pipeline" {
   # ========================================
   # Source Stage - GitHub
   # ========================================
-  stage {
-    name = "Source"
+  dynamic "stage" {
+    for_each = var.github_token != "" ? [1] : []
+    content {
+      name = "Source"
 
-    action {
-      name             = "SourceAction"
-      category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
-      version          = "1"
-      output_artifacts = ["source_output"]
+      action {
+        name             = "SourceAction"
+        category         = "Source"
+        owner            = "ThirdParty"
+        provider         = "GitHub"
+        version          = "1"
+        output_artifacts = ["source_output"]
 
-      configuration = {
-        Owner      = var.github_owner
-        Repo       = var.github_repo
-        Branch     = var.environment == "prod" ? var.github_branch_main : var.github_branch_develop
-        OAuthToken = var.github_token
-        PollForSourceChanges = false
+        configuration = {
+          Owner  = var.github_owner
+          Repo   = var.github_repo
+          Branch = var.environment == "prod" ? var.github_branch_main : var.github_branch_develop
+          OAuthToken = var.github_token
+          PollForSourceChanges = "false"
+        }
       }
     }
   }
@@ -395,19 +443,7 @@ resource "aws_codepipeline" "pipeline" {
       version          = "1"
 
       configuration = {
-        ProjectName          = aws_codebuild_project.build_project.name
-        EnvironmentVariables = jsonencode([
-          {
-            name  = "NEXTJS_REPO_NAME"
-            value = var.ecr_nextjs_repository_name
-            type  = "PLAINTEXT"
-          },
-          {
-            name  = "GO_SERVER_REPO_NAME"
-            value = var.ecr_go_server_repository_name
-            type  = "PLAINTEXT"
-          }
-        ])
+        ProjectName = aws_codebuild_project.build_project.name
       }
     }
   }
@@ -457,20 +493,23 @@ resource "aws_codepipeline" "pipeline" {
   # ========================================
   # Deploy Stage - CodeDeploy
   # ========================================
-  stage {
-    name = "Deploy"
+  dynamic "stage" {
+    for_each = var.alb_target_group_arn != "" ? [1] : []
+    content {
+      name = "Deploy"
 
-    action {
-      name           = "DeployAction"
-      category       = "Deploy"
-      owner          = "AWS"
-      provider       = "CodeDeployToECS"
-      input_artifacts = ["build_output"]
-      version        = "1"
+      action {
+        name           = "DeployAction"
+        category       = "Deploy"
+        owner          = "AWS"
+        provider       = "CodeDeployToECS"
+        input_artifacts = ["build_output"]
+        version        = "1"
 
-      configuration = {
-        ApplicationName            = aws_codedeploy_app.app.name
-        DeploymentGroupName        = aws_codedeploy_deployment_group.deployment_group.deployment_group_name
+        configuration = {
+          ApplicationName            = aws_codedeploy_app.app.name
+          DeploymentGroupName        = aws_codedeploy_deployment_group.deployment_group[0].deployment_group_name
+        }
       }
     }
   }

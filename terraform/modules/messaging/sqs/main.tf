@@ -38,10 +38,11 @@ module "sqs_queues" {
   visibility_timeout_seconds = 300     # 5 minutes
   kms_master_key_id          = var.sqs_kms_key_arn
 
-  redrive_policy = jsonencode({
-    deadLetterTargetArn = module.sqs_deadletter.queue_arn
-    maxReceiveCount     = 3
-  })
+  # 自動でjson_encodeされるので、ここでは文字列として定義する
+   redrive_policy = {
+     deadLetterTargetArn = module.sqs_deadletter.queue_arn
+     maxReceiveCount     = "3"
+   }
 
   tags = merge(var.common_tags, {
     Name = "${each.key}${local.sqs_suffix}"

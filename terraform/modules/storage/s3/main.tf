@@ -83,7 +83,7 @@ module "alb_logs" {
     {
       id     = "delete_old_logs"
       status = "Enabled"
-      filter = {}
+      prefix = "alb/AWSLogs/"
 
       expiration = {
         days = 90
@@ -216,7 +216,6 @@ module "app_filesystem" {
     {
       id     = "cleanup_old_versions"
       status = "Enabled"
-      filter = {}
 
       noncurrent_version_expiration = {
         noncurrent_days = 30
@@ -310,7 +309,7 @@ module "config" {
     {
       id     = "delete_old_config_data"
       status = "Enabled"
-      filter = {}
+      prefix = "AWSLogs/"
 
       expiration = {
         days = 365
