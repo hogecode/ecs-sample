@@ -42,20 +42,20 @@ module "public_alb" {
 
     # Target groups for Next.js (Blue/Green)
     target_groups = {
-      nextjs-blue = {
-        name             = "${var.project_name}-nextjs-blue-${var.environment}"
-        backend_protocol = "HTTP"
-        backend_port     = 3000
-        target_type      = "ip"
-        create_attachment = false
-        health_check = {
-          healthy_threshold   = 2
-          unhealthy_threshold = 2
-          timeout             = 5
-          interval            = 30
-          path                = "/"
-          matcher             = "200"
-        }
+       nextjs-blue = {
+         name             = "${var.project_name}-nextjs-blue-${var.environment}"
+         backend_protocol = "HTTP"
+         backend_port     = 3000
+         target_type      = "ip"
+         create_attachment = false
+         health_check = {
+           healthy_threshold   = 2
+           unhealthy_threshold = 2
+           timeout             = 5
+           interval            = 30
+           path                = "/api/health"
+           matcher             = "200"
+         }
         stickiness = {
           type            = "lb_cookie"
           enabled         = true
@@ -76,7 +76,7 @@ module "public_alb" {
           unhealthy_threshold = 2
           timeout             = 5
           interval            = 30
-          path                = "/"
+          path                = "/api/health"
           matcher             = "200"
         }
         stickiness = {

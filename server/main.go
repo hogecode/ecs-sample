@@ -19,6 +19,13 @@ func main() {
 		c.Next()
 	})
 
+	// Health Check Endpoint
+	r.GET("/api/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status": "healthy",
+		})
+	})
+
 	// Hello World API
 	r.GET("/api/hello", func(c *gin.Context) {
 		c.JSON(200, gin.H{
