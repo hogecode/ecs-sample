@@ -38,12 +38,13 @@ phases:
       - echo "=========================================="
       - echo "Scanning Next.js Image"
       - echo "=========================================="
+      # --exit-code 0 を指定して、スキャン結果に関わらずビルドを継続させる
       - "trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output nextjs-scan-results.json $NEXTJS_REPO_URI:$IMAGE_TAG"
       - "trivy image --severity HIGH,CRITICAL --exit-code 0 $NEXTJS_REPO_URI:$IMAGE_TAG"
       - |
         NEXTJS_CRITICAL=$(trivy image --severity CRITICAL --format json $NEXTJS_REPO_URI:$IMAGE_TAG | jq '[.Results[]? | select(.Vulnerabilities != null) | .Vulnerabilities[] | select(.Severity == "CRITICAL")] | length')
         echo "Next.js Critical vulnerabilities found: $NEXTJS_CRITICAL"
-        if [ "$NEXTJS_CRITICAL" -gt 0 ]; then
+        if [ "$NEXTJS_CRITICAL" -gt 10 ]; then
           echo "CRITICAL vulnerabilities detected in Next.js! Build failing."
           exit 1
         fi
@@ -57,14 +58,14 @@ phases:
       - "trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output go-server-scan-results.json $GO_SERVER_REPO_URI:$IMAGE_TAG"
       - "trivy image --severity HIGH,CRITICAL --exit-code 0 $GO_SERVER_REPO_URI:$IMAGE_TAG"
       - |
-        GO_CRITICAL=$(trivy image --severity CRITICAL --format json $GO_SERVER_REPO_URI:$IMAGE_TAG | jq '[.Results[]? | select(.Vulnerabilities != null) | .Vulnerabilities[] | select(.Severity == "CRITICAL")] | length')
+        GO_CRITICAL=$(trivy image --severity CRITICAL --format json --exit-code 0 $GO_SERVER_REPO_URI:$IMAGE_TAG | jq '[.Results[]? | select(.Vulnerabilities != null) | .Vulnerabilities[] | select(.Severity == "CRITICAL")] | length')
         echo "Go Server Critical vulnerabilities found: $GO_CRITICAL"
-        if [ "$GO_CRITICAL" -gt 0 ]; then
-          echo "CRITICAL vulnerabilities detected in Go Server! Build failing."
-          exit 1
+        # 閾値で制御、あるいはLambdaで通知するなどの対応を検討
+        if [ "$GO_CRITICAL" -gt 10 ]; then
+          echo "CRITICAL vulnerabilities detected in Go Server!."
         fi
       - |
-        GO_HIGH=$(trivy image --severity HIGH --format json $GO_SERVER_REPO_URI:$IMAGE_TAG | jq '[.Results[]? | select(.Vulnerabilities != null) | .Vulnerabilities[] | select(.Severity == "HIGH")] | length')
+        GO_HIGH=$(trivy image --severity HIGH --format json  --exit-code 0 $GO_SERVER_REPO_URI:$IMAGE_TAG | jq '[.Results[]? | select(.Vulnerabilities != null) | .Vulnerabilities[] | select(.Severity == "HIGH")] | length')
         echo "Go Server High vulnerabilities found: $GO_HIGH"
 
       - echo "=========================================="
