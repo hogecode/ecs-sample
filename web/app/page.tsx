@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { fetchHelloMessage } from '@/lib/api';
 
 interface ApiResponse {
   message: string;
@@ -18,13 +19,7 @@ export default function Home() {
         setLoading(true);
         setError(null);
         
-        const response = await fetch('http://localhost:8080/api/hello');
-        
-        if (!response.ok) {
-          throw new Error(`API Error: ${response.status}`);
-        }
-        
-        const data: ApiResponse = await response.json();
+        const data: ApiResponse = await fetchHelloMessage();
         setMessage(data.message);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');

@@ -255,8 +255,8 @@ resource "aws_ecs_task_definition" "nextjs" {
         var.nextjs_environment_variables,
         var.private_alb_dns_name != "" ? [
           {
-            name  = "PRIVATE_ALB_DNS_NAME"
-            value = var.private_alb_dns_name
+            name  = "NEXT_PUBLIC_API_BASE_URL"
+            value = "http://${var.private_alb_dns_name}"
           }
         ] : []
       )
