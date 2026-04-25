@@ -318,7 +318,7 @@ resource "local_file" "nextjs_taskdef_json" {
     containerDefinitions = [
       {
         name      = "${var.project_name}-nextjs"
-        image     = "<IMAGE1_NAME>"
+        image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
         essential = true
         portMappings = [
           {
@@ -352,7 +352,7 @@ resource "local_file" "go_server_taskdef_json" {
     containerDefinitions = [
       {
         name      = "${var.project_name}-go-server"
-        image     = "<IMAGE1_NAME>"
+        image     = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
         essential = true
         portMappings = [
           {
