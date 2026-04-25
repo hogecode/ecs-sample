@@ -163,6 +163,28 @@ module "ecr" {
 # ========================================
 # Phase 4: ECS Configuration
 # ========================================
+
+# Construct NextJS environment variables with dynamic ALB DNS reference
+locals {
+  nextjs_environment_variables_merged = concat(
+    [
+      {
+        name  = "NEXT_PUBLIC_API_BASE_URL"
+        value = "http://${module.alb.private_alb_dns_name}"
+      },
+      {
+        name  = "API_BASE_URL"
+        value = "http://${module.alb.private_alb_dns_name}"
+      },
+      {
+        name  = "NODE_ENV"
+        value = "production"
+      }
+    ],
+    var.nextjs_environment_variables
+  )
+}
+
 module "ecs" {
   source = "./modules/compute/ecs"
 
@@ -196,6 +218,9 @@ module "ecs" {
   # Load Balancer Target Groups
   nextjs_target_group_arn   = module.alb.nextjs_target_group_arn
   go_server_target_group_arn = module.alb.go_server_target_group_arn
+
+  # NextJS Environment Variables (with dynamic ALB DNS reference)
+  nextjs_environment_variables = local.nextjs_environment_variables_merged
 
   depends_on = [module.vpc, module.security_group, module.alb, module.ecr]
 }

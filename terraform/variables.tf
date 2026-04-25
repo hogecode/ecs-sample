@@ -557,6 +557,19 @@ variable "kms_deletion_window_days" {
 }
 
 # ========================================
+# Next.js Environment Variables Configuration
+# ========================================
+
+variable "nextjs_environment_variables" {
+  description = "Additional environment variables for Next.js container (ALB DNS is auto-configured)"
+  type = list(object({
+    name  = string
+    value = string
+  }))
+  default = []
+}
+
+# ========================================
 # Lambda Functions Configuration
 # ========================================
 
