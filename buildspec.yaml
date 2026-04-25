@@ -26,17 +26,12 @@ phases:
       - echo "=========================================="
       - echo "Phase: Build - Docker Images Build"
       - echo "=========================================="
-      
-      # Build Next.js Image
       - echo "Building Next.js Docker image on $(date)"
       - docker build -t $NEXTJS_REPO_URI:$IMAGE_TAG -t $NEXTJS_REPO_URI:latest ./web
       - echo "Next.js Docker image built successfully"
-      
-      # Build Go Server Image
       - echo "Building Go Server Docker image on $(date)"
       - docker build -t $GO_SERVER_REPO_URI:$IMAGE_TAG -t $GO_SERVER_REPO_URI:latest ./server
       - echo "Go Server Docker image built successfully"
-      
       - echo "All images built successfully"
       - docker images
 
