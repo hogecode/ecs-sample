@@ -1,4 +1,4 @@
-version: 0.0
+version: 0
 
 # ========================================
 # AppSpec - ECS Fargate Deployment Configuration
@@ -9,25 +9,25 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "arn:aws:ecs:ap-northeast-1:ACCOUNT_ID:task-definition/ecs-sample:REVISION"
+        TaskDefinition: arn:aws:ecs:ap-northeast-1:ACCOUNT_ID:task-definition/ecs-sample:REVISION
         LoadBalancerInfo:
-          ContainerName: "ecs-sample-container"
+          ContainerName: ecs-sample-container
           ContainerPort: 8080
-        PlatformVersion: "1.4.0"
+        PlatformVersion: 1.4.0
         NetworkConfiguration:
           AwsvpcConfiguration:
             Subnets:
-              - "PRIVATE_API_SUBNET_1"
-              - "PRIVATE_API_SUBNET_2"
+              - PRIVATE_API_SUBNET_1
+              - PRIVATE_API_SUBNET_2
             SecurityGroups:
-              - "GO_SERVER_SECURITY_GROUP"
-            AssignPublicIp: "DISABLED"
+              - GO_SERVER_SECURITY_GROUP
+            AssignPublicIp: DISABLED
 
 Hooks:
-  - BeforeInstall: "pre-install-hook"
-  - AfterInstall: "post-install-hook"
-  - BeforeAllowTraffic: "pre-traffic-hook"
-  - AfterAllowTraffic: "post-traffic-hook"
+  - BeforeInstall: pre-install-hook
+  - AfterInstall: post-install-hook
+  - BeforeAllowTraffic: pre-traffic-hook
+  - AfterAllowTraffic: post-traffic-hook
 
 # ========================================
 # Lifecycle Hooks
@@ -39,13 +39,13 @@ Hooks:
 # Hooks の動作:
 # 1. BeforeInstall: 新タスクをスピンアップする前に実行
 #    用途: バックアップ、スナップショット作成
-# 
+#
 # 2. AfterInstall: 新タスクがスピンアップした後に実行
 #    用途: ヘルスチェック、ウォームアップ
-# 
+#
 # 3. BeforeAllowTraffic: トラフィック切り替え前に実行
 #    用途: スモークテスト、統合テスト
-# 
+#
 # 4. AfterAllowTraffic: トラフィック切り替え後に実行
 #    用途: メトリクス検証、ログ検査
 
@@ -54,7 +54,7 @@ Hooks:
 # ========================================
 # - このファイルのプレースホルダー（ACCOUNT_ID, REVISION など）は、
 #   CodePipeline の buildspec.yaml で imagedefinitions.json として生成されたタスク定義リビジョンで置き換えられます
-# 
+#
 # - ECS デプロイモデルの設定はコンソール/Terraform で設定：
 #   * DeploymentConfiguration.MaximumPercent: 本番=200%, ステージング=200%
 #   * DeploymentConfiguration.MinimumHealthyPercent: 本番=100%, ステージング=100%

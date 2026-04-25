@@ -555,3 +555,35 @@ variable "kms_deletion_window_days" {
     error_message = "KMS deletion window must be between 7 and 30 days."
   }
 }
+
+# ========================================
+# Lambda Functions Configuration
+# ========================================
+
+variable "lambda_functions" {
+  description = "Map of Lambda function definitions. Each key is the function name, value contains function configuration."
+  type = map(object({
+    description           = string
+    source_path           = string
+    handler               = string
+    runtime               = string
+    timeout               = number
+    memory_size           = number
+    environment_variables = map(string)
+    s3_trigger = optional(object({
+      enabled     = bool
+      bucket_ref  = string
+      key_prefix  = string
+      events      = list(string)
+    }))
+    s3_read_policy = optional(bool, false)
+    tags           = optional(map(string), {})
+  }))
+  default = {}
+}
+
+variable "lambda_functions_file" {
+  description = "Path to JSON file containing Lambda function definitions"
+  type        = string
+  default     = "lambda_functions.json"
+}

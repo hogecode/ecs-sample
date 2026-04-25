@@ -232,6 +232,85 @@
         "documentation": {}
     },
     {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "boto3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "boto3",
+        "description": "boto3",
+        "detail": "boto3",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "uuid4",
+        "importPath": "uuid",
+        "description": "uuid",
+        "isExtraImport": true,
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "get_build_system_from_pyproject_toml",
+        "importPath": "package",
+        "description": "package",
+        "isExtraImport": true,
+        "detail": "package",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "stat",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "stat",
+        "description": "stat",
+        "detail": "stat",
+        "documentation": {}
+    },
+    {
         "label": "json",
         "kind": 6,
         "isExtraImport": true,
@@ -241,12 +320,602 @@
         "documentation": {}
     },
     {
+        "label": "shlex",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "shlex",
+        "description": "shlex",
+        "detail": "shlex",
+        "documentation": {}
+    },
+    {
+        "label": "shutil",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "shutil",
+        "description": "shutil",
+        "detail": "shutil",
+        "documentation": {}
+    },
+    {
+        "label": "hashlib",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "hashlib",
+        "description": "hashlib",
+        "detail": "hashlib",
+        "documentation": {}
+    },
+    {
+        "label": "zipfile",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "zipfile",
+        "description": "zipfile",
+        "detail": "zipfile",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "datetime",
+        "description": "datetime",
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "tempfile",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "tempfile",
+        "description": "tempfile",
+        "detail": "tempfile",
+        "documentation": {}
+    },
+    {
+        "label": "operator",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "operator",
+        "description": "operator",
+        "detail": "operator",
+        "documentation": {}
+    },
+    {
+        "label": "platform",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "platform",
+        "description": "platform",
+        "detail": "platform",
+        "documentation": {}
+    },
+    {
+        "label": "subprocess",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "subprocess",
+        "description": "subprocess",
+        "detail": "subprocess",
+        "documentation": {}
+    },
+    {
+        "label": "check_call",
+        "importPath": "subprocess",
+        "description": "subprocess",
+        "isExtraImport": true,
+        "detail": "subprocess",
+        "documentation": {}
+    },
+    {
+        "label": "check_output",
+        "importPath": "subprocess",
+        "description": "subprocess",
+        "isExtraImport": true,
+        "detail": "subprocess",
+        "documentation": {}
+    },
+    {
+        "label": "contextmanager",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
+        "label": "b64encode",
+        "importPath": "base64",
+        "description": "base64",
+        "isExtraImport": true,
+        "detail": "base64",
+        "documentation": {}
+    },
+    {
         "label": "graph_attr",
         "kind": 5,
         "importPath": "diagrams.infrastructure_diagram",
         "description": "diagrams.infrastructure_diagram",
         "peekOfCode": "graph_attr = {\n    \"fontsize\": \"16\",\n    \"bgcolor\": \"white\",\n    \"pad\": \"0.5\",\n}\nwith Diagram(\n    \"Infrastructure - Production\",\n    filename=\"infrastructure\",\n    show=False,\n    direction=\"TB\",",
         "detail": "diagrams.infrastructure_diagram",
+        "documentation": {}
+    },
+    {
+        "label": "lambda_handler",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.10-app1.index",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.10-app1.index",
+        "peekOfCode": "def lambda_handler(event, context):\n    print(\"Hello from app1!\")\n    return event",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.10-app1.index",
+        "documentation": {}
+    },
+    {
+        "label": "lambda_handler",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app1.index",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app1.index",
+        "peekOfCode": "def lambda_handler(event, context):\n    print(\"Hello from app1!\")\n    return event",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app1.index",
+        "documentation": {}
+    },
+    {
+        "label": "lambda_handler",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "peekOfCode": "def lambda_handler(event, context):\n    client = boto3.client('s3', regionName)\n    response = client.put_object(\n       Bucket=bucketName,\n       Key=str(uuid4()),\n       Body=bytearray(\"Hello, World!\", 'utf-8')\n    )\n    logger.info(response)\n    return response",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "peekOfCode": "logger = logging.getLogger()\nlogger.setLevel(logging.INFO)\nlogging.getLogger('boto3').setLevel(logging.DEBUG)\nlogging.getLogger('botocore').setLevel(logging.DEBUG)\nbucketName = os.environ['BUCKET_NAME']\nregionName = os.environ['REGION_NAME']\ndef lambda_handler(event, context):\n    client = boto3.client('s3', regionName)\n    response = client.put_object(\n       Bucket=bucketName,",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "documentation": {}
+    },
+    {
+        "label": "bucketName",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "peekOfCode": "bucketName = os.environ['BUCKET_NAME']\nregionName = os.environ['REGION_NAME']\ndef lambda_handler(event, context):\n    client = boto3.client('s3', regionName)\n    response = client.put_object(\n       Bucket=bucketName,\n       Key=str(uuid4()),\n       Body=bytearray(\"Hello, World!\", 'utf-8')\n    )\n    logger.info(response)",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "documentation": {}
+    },
+    {
+        "label": "regionName",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "peekOfCode": "regionName = os.environ['REGION_NAME']\ndef lambda_handler(event, context):\n    client = boto3.client('s3', regionName)\n    response = client.put_object(\n       Bucket=bucketName,\n       Key=str(uuid4()),\n       Body=bytearray(\"Hello, World!\", 'utf-8')\n    )\n    logger.info(response)\n    return response",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.8-app2.index",
+        "documentation": {}
+    },
+    {
+        "label": "lambda_handler",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.9-app-poetry.index",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.9-app-poetry.index",
+        "peekOfCode": "def lambda_handler(event, context):\n    print(\"Hello from app1!\")\n    return event",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.examples.fixtures.python3.9-app-poetry.index",
+        "documentation": {}
+    },
+    {
+        "label": "test_get_build_system_from_pyproject_toml_inexistent",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "peekOfCode": "def test_get_build_system_from_pyproject_toml_inexistent():\n    assert (\n        get_build_system_from_pyproject_toml(\"fixtures/inexistent/pyproject.toml\")\n        is None\n    )\ndef test_get_build_system_from_pyproject_toml_unknown():\n    assert (\n        get_build_system_from_pyproject_toml(\"fixtures/pyproject-unknown.toml\") is None\n    )\ndef test_get_build_system_from_pyproject_toml_poetry():",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "documentation": {}
+    },
+    {
+        "label": "test_get_build_system_from_pyproject_toml_unknown",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "peekOfCode": "def test_get_build_system_from_pyproject_toml_unknown():\n    assert (\n        get_build_system_from_pyproject_toml(\"fixtures/pyproject-unknown.toml\") is None\n    )\ndef test_get_build_system_from_pyproject_toml_poetry():\n    assert (\n        get_build_system_from_pyproject_toml(\n            \"examples/fixtures/python3.9-app-poetry/pyproject.toml\"\n        )\n        == \"poetry\"",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "documentation": {}
+    },
+    {
+        "label": "test_get_build_system_from_pyproject_toml_poetry",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "peekOfCode": "def test_get_build_system_from_pyproject_toml_poetry():\n    assert (\n        get_build_system_from_pyproject_toml(\n            \"examples/fixtures/python3.9-app-poetry/pyproject.toml\"\n        )\n        == \"poetry\"\n    )",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.tests.test_package_toml",
+        "documentation": {}
+    },
+    {
+        "label": "ZipWriteStream",
+        "kind": 6,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "class ZipWriteStream:\n    \"\"\"\"\"\"\n    def __init__(self, zip_filename,\n                 compress_type=zipfile.ZIP_DEFLATED,\n                 compresslevel=None,\n                 timestamp=None):\n        self.timestamp = timestamp\n        self.filename = zip_filename\n        if not (self.filename and isinstance(self.filename, str)):\n            raise ValueError('Zip file path must be provided')",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "ZipContentFilter",
+        "kind": 6,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "class ZipContentFilter:\n    \"\"\"\"\"\"\n    def __init__(self, args):\n        self._args = args\n        self._rules = None\n        self._excludes = set()\n        self._log = logging.getLogger('zip')\n    def compile(self, patterns):\n        rules = []\n        for p in patterns_list(self._args, patterns):",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "BuildPlanManager",
+        "kind": 6,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "class BuildPlanManager:\n    \"\"\"\"\"\"\n    def __init__(self, args, log=None):\n        self._args = args\n        self._source_paths = None\n        self._log = log or logging.root\n    def hash(self, extra_paths):\n        if not self._source_paths:\n            raise ValueError('BuildPlanManager.plan() should be called first')\n        content_hash_paths = self._source_paths + extra_paths",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "configure_logging",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def configure_logging(use_tf_stderr=False):\n    global log_handler\n    logging.addLevelName(DEBUG2, 'DEBUG2')\n    logging.addLevelName(DEBUG3, 'DEBUG3')\n    logging.addLevelName(DUMP_ENV, 'DUMP_ENV')\n    class LogFormatter(logging.Formatter):\n        default_format = '%(message)s'\n        formats = {\n            'root': default_format,\n            'build': default_format,",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "dump_env",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def dump_env():\n    if log.isEnabledFor(DUMP_ENV):\n        log.debug('ENV: %s', json.dumps(dict(os.environ), indent=2))\n################################################################################\n# Backports\ndef shlex_join(split_command):\n    \"\"\"Return a shell-escaped string from *split_command*.\"\"\"\n    return ' '.join(shlex.quote(arg) for arg in split_command)\n################################################################################\n# Common functions",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "shlex_join",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def shlex_join(split_command):\n    \"\"\"Return a shell-escaped string from *split_command*.\"\"\"\n    return ' '.join(shlex.quote(arg) for arg in split_command)\n################################################################################\n# Common functions\ndef abort(message):\n    \"\"\"Exits with an error message.\"\"\"\n    log.error(message)\n    sys.exit(1)\n@contextmanager",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "abort",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def abort(message):\n    \"\"\"Exits with an error message.\"\"\"\n    log.error(message)\n    sys.exit(1)\n@contextmanager\ndef cd(path, silent=False):\n    \"\"\"Changes the working directory.\"\"\"\n    cwd = os.getcwd()\n    if not silent:\n        cmd_log.info('cd %s', shlex.quote(path))",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "cd",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def cd(path, silent=False):\n    \"\"\"Changes the working directory.\"\"\"\n    cwd = os.getcwd()\n    if not silent:\n        cmd_log.info('cd %s', shlex.quote(path))\n    try:\n        os.chdir(path)\n        yield\n    finally:\n        os.chdir(cwd)",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "tempdir",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def tempdir(dir=None):\n    \"\"\"Creates a temporary directory and then deletes it afterwards.\"\"\"\n    prefix = 'terraform-aws-lambda-'\n    path = tempfile.mkdtemp(prefix=prefix, dir=dir)\n    cmd_log.info('mktemp -d %sXXXXXXXX # %s', prefix, shlex.quote(path))\n    try:\n        yield path\n    finally:\n        shutil.rmtree(path)\ndef list_files(top_path, log=None):",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "list_files",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def list_files(top_path, log=None):\n    \"\"\"\n    Returns a sorted list of all files in a directory.\n    \"\"\"\n    if log:\n        log = log.getChild('ls')\n    results = []\n    for root, dirs, files in os.walk(top_path, followlinks=True):\n        # Sort directories and files to ensure they are always processed in the same order\n        dirs.sort()",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def dataclass(name):\n    typ = type(name, (dict,), {\n        '__getattr__': lambda self, x: self.get(x),\n        '__init__': lambda self, **k: self.update(k),\n    })\n    return typ\ndef datatree(name, **fields):\n    def decode_json(k, v):\n        if v and isinstance(v, str) and v[0] in '\"[{':\n            try:",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "datatree",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def datatree(name, **fields):\n    def decode_json(k, v):\n        if v and isinstance(v, str) and v[0] in '\"[{':\n            try:\n                o = json.loads(v)\n                if isinstance(o, dict):\n                    return dataclass(k)(**o)\n                return o\n            except json.JSONDecodeError:\n                pass",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "timestamp_now_ns",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def timestamp_now_ns():\n    timestamp = datetime.datetime.now().timestamp()\n    timestamp = int(timestamp * 10 ** 7) * 10 ** 2\n    return timestamp\ndef source_code_hash(bytes):\n    return b64encode(hashlib.sha256(bytes).digest()).decode()\ndef yesno_bool(val):\n    if val is None:\n        return\n    if isinstance(val, bool):",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "source_code_hash",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def source_code_hash(bytes):\n    return b64encode(hashlib.sha256(bytes).digest()).decode()\ndef yesno_bool(val):\n    if val is None:\n        return\n    if isinstance(val, bool):\n        return val\n    if isinstance(val, int):\n        return bool(val)\n    if isinstance(val, str):",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "yesno_bool",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def yesno_bool(val):\n    if val is None:\n        return\n    if isinstance(val, bool):\n        return val\n    if isinstance(val, int):\n        return bool(val)\n    if isinstance(val, str):\n        if val.isnumeric():\n            return bool(int(val))",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "emit_dir_content",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def emit_dir_content(base_dir):\n    for root, dirs, files in os.walk(base_dir, followlinks=True):\n        # Sort directories and files to ensure they are always processed in the same order\n        dirs.sort()\n        files.sort()\n        if root != base_dir:\n            yield os.path.normpath(root)\n        for name in files:\n            yield os.path.normpath(os.path.join(root, name))\ndef generate_content_hash(source_paths,",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "generate_content_hash",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def generate_content_hash(source_paths,\n                          hash_func=hashlib.sha256, log=None):\n    \"\"\"\n    Generate a content hash of the source paths.\n    \"\"\"\n    if log:\n        log = log.getChild('hash')\n    hash_obj = hash_func()\n    for source_path in source_paths:\n        if os.path.isdir(source_path):",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "update_hash",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def update_hash(hash_obj, file_root, file_path):\n    \"\"\"\n    Update a hashlib object with the relative path and contents of a file.\n    \"\"\"\n    relative_path = os.path.join(file_root, file_path)\n    hash_obj.update(relative_path.encode())\n    with open(relative_path, 'rb') as open_file:\n        while True:\n            data = open_file.read(1024 * 8)\n            if not data:",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "patterns_list",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def patterns_list(args, patterns):\n    _filter = str.strip\n    if args.pattern_comments:\n        def _filter(x):\n            x = x.strip()\n            p = re.search(\"^(.*?)[ \\t]*(?:[ \\t]{2}#.*)?$\", x).group(1).rstrip()\n            if p.startswith('#'):\n                return\n            if p:\n                return p",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "get_build_system_from_pyproject_toml",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def get_build_system_from_pyproject_toml(pyproject_file):\n    # Implement a basic TOML parser because python stdlib does not provide toml support and we probably do not want to add external dependencies\n    if os.path.isfile(pyproject_file):\n        with open(pyproject_file) as f:\n            bs = False\n            for line in f.readlines():\n                if line.startswith(\"[build-system]\"):\n                    bs = True\n                    continue\n                if bs and line.startswith(\"build-backend\") and \"poetry\" in line:",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "install_pip_requirements",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def install_pip_requirements(query, requirements_file, tmp_dir):\n    # TODO:\n    #  1. Emit files instead of temp_dir\n    if not os.path.exists(requirements_file):\n        yield\n        return\n    runtime = query.runtime\n    artifacts_dir = query.artifacts_dir\n    docker = query.docker\n    temp_dir = query.temp_dir",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "install_poetry_dependencies",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def install_poetry_dependencies(query, path):\n    # TODO:\n    #  1. Emit files instead of temp_dir\n    # pyproject.toml is always required by poetry\n    pyproject_file = path\n    if os.path.isdir(path):\n        pyproject_file = os.path.join(path, \"pyproject.toml\")\n    if not os.path.exists(pyproject_file):\n        yield\n        return",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "install_npm_requirements",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def install_npm_requirements(query, requirements_file, tmp_dir):\n    # TODO:\n    #  1. Emit files instead of temp_dir\n    if not os.path.exists(requirements_file):\n        yield\n        return\n    runtime = query.runtime\n    artifacts_dir = query.artifacts_dir\n    temp_dir = query.temp_dir\n    docker = query.docker",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "docker_image_id_command",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def docker_image_id_command(tag):\n    \"\"\"\"\"\"\n    docker_cmd = ['docker', 'images', '--format={{.ID}}', tag]\n    cmd_log.info(shlex_join(docker_cmd))\n    log_handler and log_handler.flush()\n    return docker_cmd\ndef docker_build_command(tag=None, docker_file=None, build_root=False):\n    \"\"\"\"\"\"\n    if not (build_root or docker_file):\n        raise ValueError('docker_build_root or docker_file must be provided')",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "docker_build_command",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def docker_build_command(tag=None, docker_file=None, build_root=False):\n    \"\"\"\"\"\"\n    if not (build_root or docker_file):\n        raise ValueError('docker_build_root or docker_file must be provided')\n    docker_cmd = ['docker', 'build']\n    if tag:\n        docker_cmd.extend(['--tag', tag])\n    else:\n        raise ValueError('docker_image must be specified')\n    if not build_root:",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "docker_run_command",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def docker_run_command(build_root, command, runtime,\n                       image=None, shell=None, ssh_agent=False,\n                       interactive=False, pip_cache_dir=None, poetry_cache_dir=None,\n                       docker=None):\n    \"\"\"\"\"\"\n    if platform.system() not in ('Linux', 'Darwin'):\n        raise RuntimeError(\"Unsupported platform for docker building\")\n    workdir = '/var/task'\n    docker_cmd = ['docker', 'run', '--rm', '-w', workdir]\n    if interactive:",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "prepare_command",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def prepare_command(args):\n    \"\"\"\n    Generates a content hash of the source_path, which is used to determine if\n    the Lambda code has changed, ignoring file modification and access times.\n    Outputs a filename and a command to run if the archive needs to be built.\n    \"\"\"\n    log = logging.getLogger('prepare')\n    # Load the query.\n    query_data = json.load(sys.stdin)\n    dump_env()",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "build_command",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def build_command(args):\n    \"\"\"\n    Builds a zip file from the source_dir or source_file.\n    Installs dependencies with pip or npm automatically.\n    \"\"\"\n    log = logging.getLogger('build')\n    dump_env()\n    if log.isEnabledFor(DEBUG2):\n        log.debug('CMD: python3 %s', shlex_join(sys.argv))\n    with open(args.build_plan_file) as f:",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "add_hidden_commands",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def add_hidden_commands(sub_parsers):\n    sp = sub_parsers\n    def hidden_parser(name, **kwargs):\n        p = sp.add_parser(name, **kwargs)\n        sp._choices_actions.pop()  # XXX: help=argparse.SUPPRESS - doesn't work\n        return p\n    p = hidden_parser('docker', help='Run docker build')\n    p.set_defaults(command=lambda args: subprocess.call(docker_run_command(\n        args.build_root, args.docker_command, args.runtime, interactive=True)))\n    p.add_argument('build_root', help='A docker build root folder')",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "args_parser",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def args_parser():\n    ap = argparse.ArgumentParser()\n    ap.set_defaults(command=lambda _: ap.print_usage())\n    sp = ap.add_subparsers(metavar=\"COMMAND\")\n    p = sp.add_parser('prepare',\n                      help='compute a filename hash for a zip archive')\n    p.set_defaults(command=prepare_command)\n    p = sp.add_parser('build',\n                      help='build and pack to a zip archive')\n    p.set_defaults(command=build_command)",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "def main():\n    ns = argparse.Namespace(\n        pattern_comments=yesno_bool(os.environ.get(\n            'TF_LAMBDA_PACKAGE_PATTERN_COMMENTS', False)),\n        recreate_missing_package=os.environ.get(\n            'TF_RECREATE_MISSING_LAMBDA_PACKAGE', None),\n        log_level=os.environ.get('TF_LAMBDA_PACKAGE_LOG_LEVEL', 'INFO'),\n    )\n    p = args_parser()\n    args = p.parse_args(namespace=ns)",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "PY38",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "PY38 = sys.version_info >= (3, 8)\nPY37 = sys.version_info >= (3, 7)\nPY36 = sys.version_info >= (3, 6)\nWINDOWS = platform.system() == 'Windows'\nOSX = platform.system() == 'Darwin'\n################################################################################\n# Logging\nDEBUG2 = 9\nDEBUG3 = 8\nDUMP_ENV = 1",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "PY37",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "PY37 = sys.version_info >= (3, 7)\nPY36 = sys.version_info >= (3, 6)\nWINDOWS = platform.system() == 'Windows'\nOSX = platform.system() == 'Darwin'\n################################################################################\n# Logging\nDEBUG2 = 9\nDEBUG3 = 8\nDUMP_ENV = 1\nlog_handler = None",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "PY36",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "PY36 = sys.version_info >= (3, 6)\nWINDOWS = platform.system() == 'Windows'\nOSX = platform.system() == 'Darwin'\n################################################################################\n# Logging\nDEBUG2 = 9\nDEBUG3 = 8\nDUMP_ENV = 1\nlog_handler = None\nlog = logging.getLogger()",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "WINDOWS",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "WINDOWS = platform.system() == 'Windows'\nOSX = platform.system() == 'Darwin'\n################################################################################\n# Logging\nDEBUG2 = 9\nDEBUG3 = 8\nDUMP_ENV = 1\nlog_handler = None\nlog = logging.getLogger()\ncmd_log = logging.getLogger('cmd')",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "OSX",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "OSX = platform.system() == 'Darwin'\n################################################################################\n# Logging\nDEBUG2 = 9\nDEBUG3 = 8\nDUMP_ENV = 1\nlog_handler = None\nlog = logging.getLogger()\ncmd_log = logging.getLogger('cmd')\ndef configure_logging(use_tf_stderr=False):",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "DEBUG2",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "DEBUG2 = 9\nDEBUG3 = 8\nDUMP_ENV = 1\nlog_handler = None\nlog = logging.getLogger()\ncmd_log = logging.getLogger('cmd')\ndef configure_logging(use_tf_stderr=False):\n    global log_handler\n    logging.addLevelName(DEBUG2, 'DEBUG2')\n    logging.addLevelName(DEBUG3, 'DEBUG3')",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "DEBUG3",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "DEBUG3 = 8\nDUMP_ENV = 1\nlog_handler = None\nlog = logging.getLogger()\ncmd_log = logging.getLogger('cmd')\ndef configure_logging(use_tf_stderr=False):\n    global log_handler\n    logging.addLevelName(DEBUG2, 'DEBUG2')\n    logging.addLevelName(DEBUG3, 'DEBUG3')\n    logging.addLevelName(DUMP_ENV, 'DUMP_ENV')",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "DUMP_ENV",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "DUMP_ENV = 1\nlog_handler = None\nlog = logging.getLogger()\ncmd_log = logging.getLogger('cmd')\ndef configure_logging(use_tf_stderr=False):\n    global log_handler\n    logging.addLevelName(DEBUG2, 'DEBUG2')\n    logging.addLevelName(DEBUG3, 'DEBUG3')\n    logging.addLevelName(DUMP_ENV, 'DUMP_ENV')\n    class LogFormatter(logging.Formatter):",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "log_handler",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "log_handler = None\nlog = logging.getLogger()\ncmd_log = logging.getLogger('cmd')\ndef configure_logging(use_tf_stderr=False):\n    global log_handler\n    logging.addLevelName(DEBUG2, 'DEBUG2')\n    logging.addLevelName(DEBUG3, 'DEBUG3')\n    logging.addLevelName(DUMP_ENV, 'DUMP_ENV')\n    class LogFormatter(logging.Formatter):\n        default_format = '%(message)s'",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "log",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "log = logging.getLogger()\ncmd_log = logging.getLogger('cmd')\ndef configure_logging(use_tf_stderr=False):\n    global log_handler\n    logging.addLevelName(DEBUG2, 'DEBUG2')\n    logging.addLevelName(DEBUG3, 'DEBUG3')\n    logging.addLevelName(DUMP_ENV, 'DUMP_ENV')\n    class LogFormatter(logging.Formatter):\n        default_format = '%(message)s'\n        formats = {",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "documentation": {}
+    },
+    {
+        "label": "cmd_log",
+        "kind": 5,
+        "importPath": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "description": "terraform..terraform.modules.lambda_functions.lambda_function.package",
+        "peekOfCode": "cmd_log = logging.getLogger('cmd')\ndef configure_logging(use_tf_stderr=False):\n    global log_handler\n    logging.addLevelName(DEBUG2, 'DEBUG2')\n    logging.addLevelName(DEBUG3, 'DEBUG3')\n    logging.addLevelName(DUMP_ENV, 'DUMP_ENV')\n    class LogFormatter(logging.Formatter):\n        default_format = '%(message)s'\n        formats = {\n            'root': default_format,",
+        "detail": "terraform..terraform.modules.lambda_functions.lambda_function.package",
         "documentation": {}
     },
     {

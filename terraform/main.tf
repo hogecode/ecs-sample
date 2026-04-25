@@ -395,7 +395,8 @@ module "cicd" {
 #}
 
 
-
+# TODO: applyが終わらない問題を修正
+/*
 # ========================================
 # Phase 9: Message Queue (SQS)
 # ========================================
@@ -408,41 +409,91 @@ module "messaging" {
   sqs_kms_key_arn    = try(module.storage.artifact_bucket_kms_key_id, "")
   common_tags        = local.common_tags
 }
-
+}
+*/
 
 
 # ========================================
-# Phase 10: Lambda Functions
+# Phase 10: Lambda Functions (Dynamic Configuration)
 # ========================================
-module "s3_validation_lambda" {
+
+# Load Lambda functions configuration from JSON file
+locals {
+  lambda_functions_config = jsondecode(file(var.lambda_functions_file))
+  
+  # Resolve S3 bucket references in configuration
+  lambda_functions_resolved = {
+    for name, config in local.lambda_functions_config : name => {
+      description           = config.description
+      source_path           = "${path.root}/../lambda/src/${config.source_path}"
+      handler               = config.handler
+      runtime               = config.runtime
+      timeout               = config.timeout
+      memory_size           = config.memory_size
+      environment_variables = config.environment_variables
+      s3_trigger = try({
+        enabled     = config.s3_trigger.enabled
+        bucket_id   = config.s3_trigger.bucket_ref == "file_upload_bucket_id" ? module.storage.file_upload_bucket_id : config.s3_trigger.bucket_ref
+        key_prefix  = config.s3_trigger.key_prefix
+        events      = config.s3_trigger.events
+      }, null)
+      s3_read_policy = try(config.s3_read_policy, false)
+      tags           = merge(try(config.tags, {}), local.common_tags)
+    }
+  }
+}
+
+# Deploy Lambda functions dynamically from configuration
+module "lambda_functions" {
+  for_each = var.enable_s3_validation_lambda ? local.lambda_functions_resolved : {}
+
   source = "./modules/lambda"
 
-  lambda_function_name = "s3-file-validator"
-  lambda_description   = "S3 file validation Lambda function - checks file size and MIME type"
-  lambda_handler       = "index.handler"
-  lambda_runtime       = "nodejs20.x"
-  lambda_source_path   = "${path.module}/../lambda"
-
-  # S3 trigger configuration
-  enable_s3_trigger = var.enable_s3_validation_lambda
-  s3_bucket_id      = try(module.storage.file_upload_bucket_id, "")
-  s3_key_prefix     = "uploads/"
-  s3_events         = ["s3:ObjectCreated:*"]
+  lambda_function_name = "${var.project_name}-${var.environment}-${each.key}"
+  lambda_description   = each.value.description
+  lambda_handler       = each.value.handler
+  lambda_runtime       = each.value.runtime
+  lambda_source_path   = each.value.source_path
 
   # Lambda configuration
-  lambda_timeout     = 60
-  lambda_memory_size = 256
+  lambda_timeout     = each.value.timeout
+  lambda_memory_size = each.value.memory_size
 
   # Environment variables
-  environment_variables = {
-    MAX_FILE_SIZE_MB = "10"
-  }
+  environment_variables = each.value.environment_variables
+
+  # S3 trigger configuration
+  enable_s3_trigger = each.value.s3_trigger != null ? each.value.s3_trigger.enabled : false
+  s3_bucket_id      = each.value.s3_trigger != null ? each.value.s3_trigger.bucket_id : ""
+  s3_key_prefix     = each.value.s3_trigger != null ? each.value.s3_trigger.key_prefix : ""
+  s3_events         = each.value.s3_trigger != null ? each.value.s3_trigger.events : []
+
+  # IAM S3 read policy
+  policy_statements = each.value.s3_read_policy && each.value.s3_trigger != null ? [
+    {
+      Effect = "Allow"
+      Action = [
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:HeadObject"
+      ]
+      Resource = "arn:aws:s3:::${each.value.s3_trigger.bucket_id}/*"
+    },
+    {
+      Effect = "Allow"
+      Action = [
+        "s3:ListBucket",
+        "s3:GetBucketVersioning"
+      ]
+      Resource = "arn:aws:s3:::${each.value.s3_trigger.bucket_id}"
+    }
+  ] : []
 
   # CloudWatch logs
   logs_retention_days = local.logs_retention_days
 
   # Tags
-  common_tags = local.common_tags
+  common_tags = each.value.tags
 
   depends_on = [module.storage]
 }
