@@ -280,8 +280,10 @@ resource "aws_codebuild_project" "build_project" {
   }
 
   source {
-    type      = "CODEPIPELINE"
-    buildspec = "buildspec.yaml"
+    type            = "GITHUB"
+    location        = "https://github.com/${var.github_repository_id}.git"
+    git_clone_depth = 1
+    buildspec       = "buildspec.yml"
   }
 
   logs_config {
@@ -311,8 +313,10 @@ resource "aws_codebuild_project" "scan_project" {
   }
 
   source {
-    type      = "CODEPIPELINE"
-    buildspec = "buildspec-scan.yaml"
+    type            = "GITHUB"
+    location        = "https://github.com/${var.github_repository_id}.git"
+    git_clone_depth = 1
+    buildspec       = "buildspec-scan.yml"
   }
 
   logs_config {
@@ -422,7 +426,7 @@ resource "aws_codepipeline" "pipeline" {
           Repo   = var.github_repo
           Branch = var.environment == "prod" ? var.github_branch_main : var.github_branch_develop
           OAuthToken = var.github_token
-          PollForSourceChanges = "false" # falseの場合はGitHub Webhookでトリガーされる。trueの場合は定期的にGitHubをポーリングして変更を検出する。
+          PollForSourceChanges = "true" # falseの場合はGitHub Webhookでトリガーされる。trueの場合は定期的にGitHubをポーリングして変更を検出する。
         }
       }
     }
