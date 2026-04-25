@@ -12,16 +12,24 @@ CodeBuildプロジェクトのソース設定を、CodePipelineから直接GitHu
 ### 1. `terraform/modules/cicd/main.tf` の修正
 
 #### 変更前
-- `aws_codebuild_project.build_project` の `source` ブロック:
+- `aws_codebuild_project.build_project`:
   ```hcl
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+  
   source {
     type      = "CODEPIPELINE"
     buildspec = "buildspec.yaml"
   }
   ```
 
-- `aws_codebuild_project.scan_project` の `source` ブロック:
+- `aws_codebuild_project.scan_project`:
   ```hcl
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+  
   source {
     type      = "CODEPIPELINE"
     buildspec = "buildspec-scan.yaml"
@@ -29,8 +37,13 @@ CodeBuildプロジェクトのソース設定を、CodePipelineから直接GitHu
   ```
 
 #### 変更後
-- `aws_codebuild_project.build_project` の `source` ブロック:
+- `aws_codebuild_project.build_project`:
   ```hcl
+  artifacts {
+    type         = "NO_ARTIFACTS"
+    name         = null
+  }
+  
   source {
     type            = "GITHUB"
     location        = "https://github.com/${var.github_repository_id}.git"
@@ -39,8 +52,13 @@ CodeBuildプロジェクトのソース設定を、CodePipelineから直接GitHu
   }
   ```
 
-- `aws_codebuild_project.scan_project` の `source` ブロック:
+- `aws_codebuild_project.scan_project`:
   ```hcl
+  artifacts {
+    type         = "NO_ARTIFACTS"
+    name         = null
+  }
+  
   source {
     type            = "GITHUB"
     location        = "https://github.com/${var.github_repository_id}.git"
@@ -50,9 +68,10 @@ CodeBuildプロジェクトのソース設定を、CodePipelineから直接GitHu
   ```
 
 **変更点**:
-- `type`: `"CODEPIPELINE"` → `"GITHUB"`
-- `location`: GitHub リポジトリへの直接参照を追加
-- `git_clone_depth`: `1` に設定（浅いクローン）
+- `artifacts.type`: `"CODEPIPELINE"` → `"NO_ARTIFACTS"`（AWS CodeBuildの制約により必須）
+- `source.type`: `"CODEPIPELINE"` → `"GITHUB"`
+- `source.location`: GitHub リポジトリへの直接参照を追加
+- `source.git_clone_depth`: `1` に設定（浅いクローン）
 - `buildspec`: `.yaml` → `.yml` に拡張子を変更
 
 ### 2. `terraform/modules/cicd/variables.tf` に新変数を追加

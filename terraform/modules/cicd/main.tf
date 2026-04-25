@@ -4,12 +4,12 @@
 
 locals {
   project_env = "${var.project_name}-${var.environment}"
-  
-  codebuild_build_project   = "${local.project_env}-build"
-  codebuild_scan_project    = "${local.project_env}-scan"
-  codepipeline_name         = "${local.project_env}-pipeline"
-  codedeploy_app_name       = "${local.project_env}-app"
-  codedeploy_group_name     = "${local.project_env}-deployment-group"
+
+  codebuild_build_project = "${local.project_env}-build"
+  codebuild_scan_project  = "${local.project_env}-scan"
+  codepipeline_name       = "${local.project_env}-pipeline"
+  codedeploy_app_name     = "${local.project_env}-app"
+  codedeploy_group_name   = "${local.project_env}-deployment-group"
 }
 
 # ========================================
@@ -122,19 +122,19 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
         ]
         Resource = "arn:aws:s3:::${var.artifact_bucket_name}/*"
       },
-       {
-         Effect = "Allow"
-         Action = [
-           "codebuild:StartBuild",
-           "codebuild:BatchGetBuilds",
-           "codebuild:BatchGetReports",
-           "codebuild:CreateReport",
-           "codebuild:CreateReportGroup",
-           "codebuild:UpdateReport",
-           "codebuild:BatchPutTestReports"
-         ]
-         Resource = "*"
-       },
+      {
+        Effect = "Allow"
+        Action = [
+          "codebuild:StartBuild",
+          "codebuild:BatchGetBuilds",
+          "codebuild:BatchGetReports",
+          "codebuild:CreateReport",
+          "codebuild:CreateReportGroup",
+          "codebuild:UpdateReport",
+          "codebuild:BatchPutTestReports"
+        ]
+        Resource = "*"
+      },
       {
         Effect = "Allow"
         Action = [
@@ -243,7 +243,7 @@ data "aws_caller_identity" "current" {}
 
 # CodeBuild Project - Build Docker Images (Multi-Service)
 resource "aws_codebuild_project" "build_project" {
-  name = local.codebuild_build_project
+  name         = local.codebuild_build_project
   service_role = aws_iam_role.codebuild_role.arn
 
   artifacts {
@@ -255,35 +255,33 @@ resource "aws_codebuild_project" "build_project" {
     image                       = var.codebuild_environment_image
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
-    privileged_mode            = var.codebuild_privileged_mode
-    
+    privileged_mode             = var.codebuild_privileged_mode
+
     # Environment variables for multi-service builds
     environment_variable {
       name  = "AWS_ACCOUNT_ID"
       value = data.aws_caller_identity.current.account_id
     }
-    
+
     environment_variable {
       name  = "AWS_DEFAULT_REGION"
       value = var.aws_region
     }
-    
+
     environment_variable {
       name  = "NEXTJS_REPO_NAME"
       value = var.ecr_nextjs_repository_name
     }
-    
+
     environment_variable {
       name  = "GO_SERVER_REPO_NAME"
       value = var.ecr_go_server_repository_name
     }
   }
-
+  
   source {
-    type            = "GITHUB"
-    location        = "https://github.com/${var.github_repository_id}.git"
-    git_clone_depth = 1
-    buildspec       = "buildspec.yml"
+    type      = "CODEPIPELINE"
+    buildspec = "buildspec.yaml"
   }
 
   logs_config {
@@ -297,7 +295,7 @@ resource "aws_codebuild_project" "build_project" {
 
 # CodeBuild Project - Security Scan
 resource "aws_codebuild_project" "scan_project" {
-  name = "${local.codebuild_scan_project}-scan"
+  name         = "${local.codebuild_scan_project}-scan"
   service_role = aws_iam_role.codebuild_role.arn
 
   artifacts {
@@ -309,14 +307,12 @@ resource "aws_codebuild_project" "scan_project" {
     image                       = var.codebuild_environment_image
     type                        = "LINUX_CONTAINER"
     image_pull_credentials_type = "CODEBUILD"
-    privileged_mode            = var.codebuild_privileged_mode
+    privileged_mode             = var.codebuild_privileged_mode
   }
 
   source {
-    type            = "GITHUB"
-    location        = "https://github.com/${var.github_repository_id}.git"
-    git_clone_depth = 1
-    buildspec       = "buildspec-scan.yml"
+    type      = "CODEPIPELINE"
+    buildspec = "buildspec.yaml"
   }
 
   logs_config {
@@ -422,10 +418,10 @@ resource "aws_codepipeline" "pipeline" {
         output_artifacts = ["source_output"]
 
         configuration = {
-          Owner  = var.github_owner
-          Repo   = var.github_repo
-          Branch = var.environment == "prod" ? var.github_branch_main : var.github_branch_develop
-          OAuthToken = var.github_token
+          Owner                = var.github_owner
+          Repo                 = var.github_repo
+          Branch               = var.environment == "prod" ? var.github_branch_main : var.github_branch_develop
+          OAuthToken           = var.github_token
           PollForSourceChanges = "true" # falseの場合はGitHub Webhookでトリガーされる。trueの場合は定期的にGitHubをポーリングして変更を検出する。
         }
       }
@@ -504,16 +500,16 @@ resource "aws_codepipeline" "pipeline" {
       name = "Deploy"
 
       action {
-        name           = "DeployAction"
-        category       = "Deploy"
-        owner          = "AWS"
-        provider       = "CodeDeployToECS"
+        name            = "DeployAction"
+        category        = "Deploy"
+        owner           = "AWS"
+        provider        = "CodeDeployToECS"
         input_artifacts = ["build_output"]
-        version        = "1"
+        version         = "1"
 
         configuration = {
-          ApplicationName            = aws_codedeploy_app.app.name
-          DeploymentGroupName        = aws_codedeploy_deployment_group.deployment_group[0].deployment_group_name
+          ApplicationName     = aws_codedeploy_app.app.name
+          DeploymentGroupName = aws_codedeploy_deployment_group.deployment_group[0].deployment_group_name
         }
       }
     }

@@ -11,11 +11,11 @@ phases:
       - echo "=========================================="
       - echo "Phase: Pre-Build - Trivy Installation"
       - echo "=========================================="
-      - echo "Installing Trivy on $(date)"
+      - "echo \"Installing Trivy on $(date)\""
       - apt-get update -y
       - apt-get install -y wget apt-transport-https gnupg lsb-release
-      - wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -
-      - echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | tee -a /etc/apt/sources.list.d/trivy.list
+      - "wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | apt-key add -"
+      - "echo \"deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main\" | tee -a /etc/apt/sources.list.d/trivy.list"
       - apt-get update -y
       - apt-get install -y trivy
       - echo "Trivy installed successfully"
@@ -26,14 +26,14 @@ phases:
       - echo "=========================================="
       - echo "Phase: Build - Security Scan with Trivy"
       - echo "=========================================="
-      - echo "Scanning Docker image for vulnerabilities on $(date)"
-      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
-      - echo "Scanning image: $REPOSITORY_URI:$IMAGE_TAG"
-      - trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output scan-results.json $REPOSITORY_URI:$IMAGE_TAG
-      - trivy image --severity HIGH,CRITICAL --exit-code 0 $REPOSITORY_URI:$IMAGE_TAG
-      - echo "Running severity check..."
+      - "echo \"Scanning Docker image for vulnerabilities on $(date)\""
+      - "REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$IMAGE_REPO_NAME"
+      - "COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)"
+      - "IMAGE_TAG=${COMMIT_HASH:=latest}"
+      - "echo \"Scanning image: $REPOSITORY_URI:$IMAGE_TAG\""
+      - "trivy image --severity HIGH,CRITICAL --exit-code 0 --format json --output scan-results.json $REPOSITORY_URI:$IMAGE_TAG"
+      - "trivy image --severity HIGH,CRITICAL --exit-code 0 $REPOSITORY_URI:$IMAGE_TAG"
+      - "echo \"Running severity check...\""
       - |
         CRITICAL_COUNT=$(trivy image --severity CRITICAL --format json $REPOSITORY_URI:$IMAGE_TAG | jq '[.Results[]? | select(.Vulnerabilities != null) | .Vulnerabilities[] | select(.Severity == "CRITICAL")] | length')
         echo "Critical vulnerabilities found: $CRITICAL_COUNT"
