@@ -308,7 +308,7 @@ resource "aws_ecs_task_definition" "go_server" {
 # Generate Next.js Task Definition JSON
 # local_fileリソースを使用して、CodeDeployで使用するタスク定義のJSONファイルを生成
 resource "local_file" "nextjs_taskdef_json" {
-  filename = "${path.root}/nextjs-taskdef.json"
+  filename = "${path.module}/../../../../nextjs-taskdef.json"
   content = jsonencode({
     family                   = aws_ecs_task_definition.nextjs.family
     networkMode              = "awsvpc"
@@ -342,7 +342,7 @@ resource "local_file" "nextjs_taskdef_json" {
 
 # Generate Go Server Task Definition JSON
 resource "local_file" "go_server_taskdef_json" {
-  filename = "${path.root}/go-server-taskdef.json"
+  filename = "${path.module}/../../../../go-server-taskdef.json"
   content = jsonencode({
     family                   = aws_ecs_task_definition.go_server.family
     networkMode              = "awsvpc"

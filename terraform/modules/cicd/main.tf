@@ -660,7 +660,7 @@ resource "aws_codepipeline" "pipeline" {
 # ========================================
 
 resource "local_file" "appspec_nextjs" {
-  filename = "${path.root}/appspec-nextjs.yaml"
+  filename = "${path.module}/../../../appspec-nextjs.yaml"
   content  = templatefile("${path.module}/appspec-nextjs.yaml.tpl", {
     container_name = "ecs-sample-nextjs"
     container_port = 3000
@@ -668,7 +668,7 @@ resource "local_file" "appspec_nextjs" {
 }
 
 resource "local_file" "appspec_go_server" {
-  filename = "${path.root}/appspec-go-server.yaml"
+  filename = "${path.module}/../../../appspec-go-server.yaml"
   content  = templatefile("${path.module}/appspec-go-server.yaml.tpl", {
     container_name = "ecs-sample-go-server"
     container_port = 8080
