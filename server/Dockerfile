@@ -1,6 +1,6 @@
 # マルチステージビルド：ビルドステージ
 # AWS公式のGoイメージを使用
-FROM public.ecr.aws/golang:1.21-alpine AS builder 
+FROM public.ecr.aws/docker/library/golang:1.21rc4-alpine AS builder 
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # 本番ステージ
-FROM public.ecr.aws/alpine:latest
+FROM public.ecr.aws/docker/library/golang:1.21rc4-alpine
 
 WORKDIR /root/
 
@@ -29,10 +29,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # ビルダーステージからバイナリをコピー
 COPY --from=builder /app/server .
-
-# ヘルスチェック
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/hello || exit 1
 
 # ポート 8080 をエクスポート
 EXPOSE 8080
