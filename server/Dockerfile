@@ -1,5 +1,6 @@
 # マルチステージビルド：ビルドステージ
-FROM golang:1.21-alpine AS builder
+# AWS公式のGoイメージを使用
+FROM public.ecr.aws/golang:1.21-alpine AS builder 
 
 WORKDIR /app
 
@@ -19,7 +20,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
 # 本番ステージ
-FROM alpine:latest
+FROM public.ecr.aws/alpine:latest
 
 WORKDIR /root/
 
