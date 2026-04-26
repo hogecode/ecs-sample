@@ -15,12 +15,12 @@ aws_region   = "ap-northeast-1"
 
 # Network Configuration
 vpc_cidr                  = "10.0.0.0/16"
-availability_zones        = ["ap-northeast-1a"]
-public_subnet_cidrs       = ["10.0.0.0/24"]
-private_app_subnet_cidrs  = ["10.0.10.0/24"]
-private_api_subnet_cidrs  = ["10.0.20.0/24"]
-private_db_subnet_cidrs   = ["10.0.30.0/24"]
-enable_nat_gateway        = true
+availability_zones        = ["ap-northeast-1a", "ap-northeast-1c"]
+public_subnet_cidrs       = ["10.0.0.0/24", "10.0.1.0/24"]
+private_app_subnet_cidrs  = ["10.0.10.0/24", "10.0.11.0/24"]
+private_api_subnet_cidrs  = ["10.0.20.0/24", "10.0.21.0/24"]
+private_db_subnet_cidrs   = ["10.0.30.0/24", "10.0.31.0/24"]
+enable_nat_gateway        = false
 enable_vpc_flow_logs      = false
 
 # ECS Cluster
@@ -32,6 +32,7 @@ nextjs_task_memory  = 512      # Memory in MB
 nextjs_desired_count = 1       # Desired number of tasks
 nextjs_min_capacity = 1        # Minimum for auto-scaling
 nextjs_max_capacity = 5        # Maximum for auto-scaling
+nextjs_environment_variables = []
 
 # ECS - Go Server Service
 go_server_task_cpu      = 512  # CPU units: 256=0.25vCPU, 512=0.5vCPU, 1024=1vCPU
@@ -39,6 +40,8 @@ go_server_task_memory   = 1024 # Memory in MB
 go_server_desired_count = 1    # Desired number of tasks
 go_server_min_capacity  = 1    # Minimum for auto-scaling
 go_server_max_capacity  = 5    # Maximum for auto-scaling
+go_server_environment_variables = []
+go_server_secrets = []
 
 # RDS Database
 rds_engine                = "mysql"       # or "postgres"

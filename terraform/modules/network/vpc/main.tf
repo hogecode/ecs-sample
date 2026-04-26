@@ -10,10 +10,10 @@ module "vpc" {
 
   azs             = var.availability_zones
   public_subnets = var.public_subnet_cidrs
-  
+
   # Private subnets - Application Layer
   private_subnets = var.private_app_subnet_cidrs
-  
+
   # Additional private subnets for different layers
   # This is handled separately since terraform-aws-modules VPC doesn't support multiple private subnet groups directly
 
@@ -161,7 +161,7 @@ resource "aws_vpc_endpoint" "secrets_manager" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
 
   tags = {
     Name = "${var.project_name}-secretsmanager-endpoint-${var.environment}"
@@ -175,7 +175,24 @@ resource "aws_vpc_endpoint" "logs" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 
   tags = {
     Name = "${var.project_name}-logs-endpoint-${var.environment}"
@@ -189,7 +206,27 @@ resource "aws_vpc_endpoint" "ecr_api" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages",
+          "ecr:BatchCheckLayerAvailability"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 
   tags = {
     Name = "${var.project_name}-ecr-api-endpoint-${var.environment}"
@@ -203,7 +240,24 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 
   tags = {
     Name = "${var.project_name}-ecr-dkr-endpoint-${var.environment}"
@@ -213,7 +267,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
 # Default Security Group for VPC Endpoints (if not provided)
 resource "aws_security_group" "vpc_endpoints_default" {
   count = var.vpc_endpoints_security_group_id == "" ? 1 : 0
-  
+
   name        = "${var.project_name}-vpc-endpoints-default-sg-${var.environment}"
   description = "Default Security group for VPC Endpoints"
   vpc_id      = module.vpc.vpc_id
@@ -246,7 +300,7 @@ resource "aws_vpc_endpoint" "monitoring" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
 
   tags = {
     Name = "${var.project_name}-monitoring-endpoint-${var.environment}"
@@ -260,7 +314,7 @@ resource "aws_vpc_endpoint" "ssm" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
 
   tags = {
     Name = "${var.project_name}-ssm-endpoint-${var.environment}"
@@ -274,7 +328,7 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
 
   tags = {
     Name = "${var.project_name}-ssmmessages-endpoint-${var.environment}"
@@ -288,7 +342,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
 
   tags = {
     Name = "${var.project_name}-ec2messages-endpoint-${var.environment}"
@@ -302,7 +356,7 @@ resource "aws_vpc_endpoint" "sqs" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = [for i in range(length(var.availability_zones)) : aws_subnet.private_api[i].id]
+  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
 
   tags = {
     Name = "${var.project_name}-sqs-endpoint-${var.environment}"
