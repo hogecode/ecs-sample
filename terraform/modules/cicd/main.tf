@@ -683,6 +683,36 @@ resource "aws_codepipeline" "pipeline" {
     }
   }
 
+  # ========================================
+  # Deploy Stage 2 - Go Server Deployment
+  # ========================================
+  dynamic "stage" {
+    for_each = var.ecs_go_cluster_name != "" && var.ecs_go_service_name != "" ? [1] : []
+    content {
+      name = "DeployGoServer"
+
+      action {
+        name            = "DeployGoServerAction"
+        category        = "Deploy"
+        owner           = "AWS"
+        provider        = "CodeDeployToECS"
+        input_artifacts = ["build_output"]
+        version         = "1"
+        run_order       = 2
+
+        configuration = {
+          ApplicationName                = aws_codedeploy_app.app.name
+          DeploymentGroupName            = aws_codedeploy_deployment_group.go_deployment_group[0].deployment_group_name
+          AppSpecTemplateArtifact        = "build_output"
+          AppSpecTemplatePath            = "appspec-go-server.yaml"
+
+          TaskDefinitionTemplateArtifact = "build_output"
+          TaskDefinitionTemplatePath     = "go-server-taskdef.json"
+        }
+      }
+    }
+  }
+
 
 
   tags = var.common_tags
