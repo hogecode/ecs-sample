@@ -7,7 +7,7 @@ import axios from 'axios';
  * API_BASE_URL 環境変数から Base URL を取得（taskdef.json で注入）
  */
 const apiClient = axios.create({
-  baseURL: process.env.API_BASE_URL,
+  baseURL: `${process.env.API_BASE_URL}:8080`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
