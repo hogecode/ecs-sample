@@ -176,6 +176,23 @@ resource "aws_vpc_endpoint" "logs" {
   private_dns_enabled = true
 
   subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 
   tags = {
     Name = "${var.project_name}-logs-endpoint-${var.environment}"
