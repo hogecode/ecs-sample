@@ -1,36 +1,7 @@
-'use client';
+import { getHomeData } from '@/lib/api/home';
 
-import { useState, useEffect } from 'react';
-import { fetchHelloMessage } from '@/lib/api';
-
-interface ApiResponse {
-  message: string;
-  status: string;
-}
-
-export default function Home() {
-  const [message, setMessage] = useState<string>('Loading...');
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchHello = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const data: ApiResponse = await fetchHelloMessage();
-        setMessage(data.message);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        setMessage('Failed to fetch message');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHello();
-  }, []);
+export default async function Home() {
+  const { message, error } = await getHomeData();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-blue-100">
@@ -41,11 +12,7 @@ export default function Home() {
         
         <div className="space-y-4">
           <div className="border-2 border-blue-300 rounded-lg p-6 bg-blue-50">
-            {loading ? (
-              <p className="text-center text-blue-600 animate-pulse">
-                APIを呼び出し中...
-              </p>
-            ) : error ? (
+            {error ? (
               <div className="text-center">
                 <p className="text-red-600 font-semibold">エラーが発生しました</p>
                 <p className="text-red-500 text-sm mt-2">{error}</p>
@@ -58,7 +25,7 @@ export default function Home() {
           </div>
 
           <p className="text-center text-gray-600 text-sm">
-            バックエンド: {process.env.NEXT_PUBLIC_API_BASE_URL}
+            バックエンド: {process.env.API_BASE_URL}
           </p>
         </div>
       </div>
