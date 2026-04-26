@@ -236,6 +236,7 @@ resource "aws_ecs_task_definition" "nextjs" {
       name      = "${var.project_name}-nextjs"
       image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
       essential = true
+      enableExecuteCommand    = true
       portMappings = [
         {
           containerPort = var.nextjs_container_port
@@ -284,6 +285,7 @@ resource "aws_ecs_task_definition" "go_server" {
       name      = "${var.project_name}-go-server"
       image     = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
       essential = true
+      enableExecuteCommand    = true
       portMappings = [
         {
           containerPort = var.go_server_container_port
@@ -333,9 +335,11 @@ resource "local_file" "nextjs_taskdef_json" {
     memory                  = tostring(var.nextjs_task_memory)
     executionRoleArn        = aws_iam_role.ecs_task_execution_role.arn
     taskRoleArn             = aws_iam_role.ecs_task_role_nextjs.arn
+    
     containerDefinitions = [
       {
         name      = "${var.project_name}-nextjs"
+        enableExecuteCommand    = true
         image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
         essential = true
         portMappings = [
@@ -373,6 +377,7 @@ resource "local_file" "go_server_taskdef_json" {
   content = jsonencode({
     family                  = aws_ecs_task_definition.go_server.family
     networkMode             = "awsvpc"
+    enableExecuteCommand    = true
     requiresCompatibilities = ["FARGATE"]
     cpu                     = tostring(var.go_server_task_cpu)
     memory                  = tostring(var.go_server_task_memory)
