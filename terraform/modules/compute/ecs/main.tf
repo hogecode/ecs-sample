@@ -419,16 +419,6 @@ resource "aws_ecs_service" "nextjs" {
     container_port   = var.nextjs_container_port
   }
 
-  deployment_controller {
-    type = "CODE_DEPLOY"
-  }
-
-  # CODE_DEPLOY deployment controller では、Terraformがタスク定義やdesired_countを
-  # 直接更新できないため、CodeDeployで管理される変更は無視する
-  lifecycle {
-    ignore_changes = [task_definition, desired_count]
-  }
-
   depends_on = [
     aws_iam_role_policy.ecs_task_execution_custom,
     aws_iam_role_policy.ecs_task_role_nextjs
@@ -447,10 +437,6 @@ resource "aws_ecs_service" "go_server" {
   desired_count   = var.go_server_desired_count
   launch_type     = "FARGATE"
 
-  deployment_controller {
-    type = "CODE_DEPLOY"
-  }
-
   network_configuration {
     subnets          = var.private_api_subnet_ids
     security_groups  = [var.go_server_security_group_id]
@@ -461,12 +447,6 @@ resource "aws_ecs_service" "go_server" {
     target_group_arn = var.go_server_target_group_arn
     container_name   = "${var.project_name}-go-server"
     container_port   = var.go_server_container_port
-  }
-
-  # CODE_DEPLOY deployment controller では、Terraformがタスク定義やdesired_countを
-  # 直接更新できないため、CodeDeployで管理される変更は無視する
-  lifecycle {
-    ignore_changes = [task_definition, desired_count]
   }
 
   depends_on = [
