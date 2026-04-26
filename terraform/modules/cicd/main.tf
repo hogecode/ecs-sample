@@ -198,6 +198,12 @@ resource "aws_iam_role" "codedeploy_role" {
   tags = var.common_tags
 }
 
+# AWS Managed Policy for CodeDeploy to ECS
+resource "aws_iam_role_policy_attachment" "codedeploy_managed_policy" {
+  role       = aws_iam_role.codedeploy_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS"
+}
+
 resource "aws_iam_role_policy" "codedeploy_policy" {
   name_prefix = "codedeploy-policy-"
   role        = aws_iam_role.codedeploy_role.id
