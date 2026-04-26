@@ -419,14 +419,6 @@ resource "aws_ecs_service" "nextjs" {
     container_port   = var.nextjs_container_port
   }
 
-  deployment_controller {
-    type = "CODE_DEPLOY"
-  }
-
-  lifecycle {
-    ignore_changes = [task_definition, desired_count, load_balancer]
-  }
-
   depends_on = [
     aws_iam_role_policy.ecs_task_execution_custom,
     aws_iam_role_policy.ecs_task_role_nextjs
@@ -455,14 +447,6 @@ resource "aws_ecs_service" "go_server" {
     target_group_arn = var.go_server_target_group_arn
     container_name   = "${var.project_name}-go-server"
     container_port   = var.go_server_container_port
-  }
-
-  deployment_controller {
-    type = "CODE_DEPLOY"
-  }
-
-  lifecycle {
-    ignore_changes = [task_definition, desired_count, load_balancer]
   }
 
   depends_on = [
