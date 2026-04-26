@@ -210,6 +210,35 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   }
 }
 
+# Default Security Group for VPC Endpoints (if not provided)
+resource "aws_security_group" "vpc_endpoints_default" {
+  count = var.vpc_endpoints_security_group_id == "" ? 1 : 0
+  
+  name        = "${var.project_name}-vpc-endpoints-default-sg-${var.environment}"
+  description = "Default Security group for VPC Endpoints"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+    description = "HTTPS from VPC"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "All outbound traffic"
+  }
+
+  tags = {
+    Name = "${var.project_name}-vpc-endpoints-default-sg-${var.environment}"
+  }
+}
+
 # Interface Endpoint for CloudWatch
 resource "aws_vpc_endpoint" "monitoring" {
   vpc_id              = module.vpc.vpc_id

@@ -198,6 +198,12 @@ resource "aws_iam_role" "codedeploy_role" {
   tags = var.common_tags
 }
 
+# AWS Managed Policy for CodeDeploy to ECS
+resource "aws_iam_role_policy_attachment" "codedeploy_managed_policy" {
+  role       = aws_iam_role.codedeploy_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS"
+}
+
 resource "aws_iam_role_policy" "codedeploy_policy" {
   name_prefix = "codedeploy-policy-"
   role        = aws_iam_role.codedeploy_role.id
@@ -235,6 +241,15 @@ resource "aws_iam_role_policy" "codedeploy_policy" {
             ]
           }
         }
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/codedeploy/*"
       }
     ]
   })
@@ -363,6 +378,17 @@ resource "aws_cloudwatch_log_group" "codebuild_build_log" {
 
 resource "aws_cloudwatch_log_group" "codebuild_scan_log" {
   name_prefix       = "/aws/codebuild/${local.codebuild_scan_project}"
+  retention_in_days = 14
+
+  tags = var.common_tags
+}
+
+# ========================================
+# CloudWatch Logs for CodeDeploy
+# ========================================
+
+resource "aws_cloudwatch_log_group" "codedeploy_log" {
+  name_prefix       = "/aws/codedeploy/${local.codedeploy_app_name}"
   retention_in_days = 14
 
   tags = var.common_tags
@@ -599,6 +625,35 @@ resource "aws_codepipeline" "pipeline" {
   }
 
   # ========================================
+  # Deploy Stage 2 - Go Server Deployment
+  # ========================================
+  dynamic "stage" {
+    for_each = var.ecs_go_cluster_name != "" && var.ecs_go_service_name != "" ? [1] : []
+    content {
+      name = "DeployGoServer"
+
+      action {
+        name            = "DeployGoServerAction"
+        category        = "Deploy"
+        owner           = "AWS"
+        provider        = "CodeDeployToECS"
+        input_artifacts = ["build_output"]
+        version         = "1"
+        run_order       = 1
+
+        configuration = {
+          ApplicationName                = aws_codedeploy_app.app.name
+          DeploymentGroupName            = aws_codedeploy_deployment_group.go_deployment_group[0].deployment_group_name
+          AppSpecTemplateArtifact        = "build_output"
+          AppSpecTemplatePath            = "appspec-go-server.yaml"
+
+          TaskDefinitionTemplateArtifact = "build_output"
+          TaskDefinitionTemplatePath     = "go-server-taskdef.json"
+        }
+      }
+    }
+  }
+  # ========================================
   # Deploy Stage 1 - Next.js Deployment
   # ========================================
   dynamic "stage" {
@@ -613,7 +668,7 @@ resource "aws_codepipeline" "pipeline" {
         provider        = "CodeDeployToECS"
         input_artifacts = ["build_output"]
         version         = "1"
-        run_order       = 1
+        run_order       = 2
 
         configuration = {
           ApplicationName         = aws_codedeploy_app.app.name
@@ -657,6 +712,8 @@ resource "aws_codepipeline" "pipeline" {
       }
     }
   }
+
+
 
   tags = var.common_tags
 }
