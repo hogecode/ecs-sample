@@ -74,7 +74,7 @@ output "private_alb_arn" {
 
 output "private_alb_dns_name" {
   description = "Private ALB DNS name"
-  value       = try(module.private_alb.this_lb_dns_name, module.private_alb.lb_dns_name, "")
+  value       = try(module.private_alb.dns_name, module.private_alb.this_lb_dns_name, "")
 }
 
 output "private_alb_zone_id" {
