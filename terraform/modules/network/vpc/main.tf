@@ -190,6 +190,26 @@ resource "aws_vpc_endpoint" "ecr_api" {
   private_dns_enabled = true
 
   subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages",
+          "ecr:BatchCheckLayerAvailability"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 
   tags = {
     Name = "${var.project_name}-ecr-api-endpoint-${var.environment}"
@@ -204,9 +224,55 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
   private_dns_enabled = true
 
   subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchGetImage",
+          "ecr:GetDownloadUrlForLayer"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 
   tags = {
     Name = "${var.project_name}-ecr-dkr-endpoint-${var.environment}"
+  }
+}
+
+# Default Security Group for VPC Endpoints (if not provided)
+resource "aws_security_group" "vpc_endpoints_default" {
+  count = var.vpc_endpoints_security_group_id == "" ? 1 : 0
+  
+  name        = "${var.project_name}-vpc-endpoints-default-sg-${var.environment}"
+  description = "Default Security group for VPC Endpoints"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+    description = "HTTPS from VPC"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "All outbound traffic"
+  }
+
+  tags = {
+    Name = "${var.project_name}-vpc-endpoints-default-sg-${var.environment}"
   }
 }
 
