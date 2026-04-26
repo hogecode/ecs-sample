@@ -222,10 +222,13 @@ module "ecs" {
   # Internal Communication Configuration
   private_alb_dns_name = module.alb.private_alb_dns_name
 
-  # NextJS Environment Variables (with dynamic ALB DNS reference)
-  nextjs_environment_variables = local.nextjs_environment_variables_merged
+   # NextJS Environment Variables (with dynamic ALB DNS reference)
+   nextjs_environment_variables = local.nextjs_environment_variables_merged
 
-  depends_on = [module.vpc, module.security_group, module.alb, module.ecr]
+   # Secrets Manager Configuration
+   db_credentials_secret_arn = module.secrets.app_db_credentials_arn
+
+   depends_on = [module.vpc, module.security_group, module.alb, module.ecr, module.secrets]
 }
 
 

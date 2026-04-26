@@ -299,8 +299,16 @@ resource "aws_ecs_task_definition" "go_server" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-      environment = var.go_server_environment_variables
-      secrets     = var.go_server_secrets
+       environment = concat(
+         var.go_server_environment_variables,
+         var.db_credentials_secret_arn != "" ? [
+           {
+             name  = "DB_CREDENTIALS_SECRET_ARN"
+             value = var.db_credentials_secret_arn
+           }
+         ] : []
+       )
+       secrets     = var.go_server_secrets
     }
   ])
 
@@ -390,6 +398,15 @@ resource "local_file" "go_server_taskdef_json" {
             "awslogs-stream-prefix" = "ecs"
           }
         }
+        environment = concat(
+          var.go_server_environment_variables,
+          var.db_credentials_secret_arn != "" ? [
+            {
+              name  = "DB_CREDENTIALS_SECRET_ARN"
+              value = var.db_credentials_secret_arn
+            }
+          ] : []
+        )
       }
     ]
   })
@@ -424,6 +441,14 @@ resource "aws_ecs_service" "nextjs" {
     aws_iam_role_policy.ecs_task_role_nextjs
   ]
 
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
+  }
+  
   tags = {
     Name = "${var.project_name}-nextjs-service-${var.environment}"
   }
@@ -447,6 +472,14 @@ resource "aws_ecs_service" "go_server" {
     target_group_arn = var.go_server_target_group_arn
     container_name   = "${var.project_name}-go-server"
     container_port   = var.go_server_container_port
+  }
+
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
   }
 
   depends_on = [

@@ -58,7 +58,7 @@ export default function Home() {
           </div>
 
           <p className="text-center text-gray-600 text-sm">
-            バックエンド: http://localhost:8080/api/hello
+            バックエンド: {process.env.NEXT_PUBLIC_API_BASE_URL}
           </p>
         </div>
       </div>
