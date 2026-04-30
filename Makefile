@@ -116,6 +116,51 @@ tf.destroy.dev:
 	@$(tf) destroy -var-file=environments/dev.tfvars -auto-approve
 
 # ========================================
+# Go/Database Targets
+# ========================================
+
+.PHONY: sqlc.generate
+sqlc.generate:
+	@echo "Generating code from SQL queries using sqlc..."
+	@cd server; sqlc generate
+	@echo "Code generation completed!"
+
+.PHONY: sqlc.verify
+sqlc.verify:
+	@echo "Verifying sqlc configuration..."
+	@cd server && sqlc compile
+	@echo "Configuration verified!"
+
+.PHONY: dbmate.new-migration
+dbmate.new-migration:
+	@if [ -z "$(NAME)" ]; then \
+		echo "Usage: make dbmate.new-migration NAME=your_migration_name"; \
+		exit 1; \
+	fi
+	@echo "Creating new dbmate migration: $(NAME)..."
+	@cd server && dbmate new $(NAME)
+
+.PHONY: dbmate.up
+dbmate.up:
+	@echo "Running dbmate migrations..."
+	@cd server && APP_ENV=dev dbmate up
+
+.PHONY: dbmate.down
+dbmate.down:
+	@echo "Rolling back dbmate migrations..."
+	@cd server && APP_ENV=dev dbmate down
+
+.PHONY: dbmate.dump
+dbmate.dump:
+	@echo "Dumping current database schema..."
+	@cd server && APP_ENV=dev dbmate dump
+
+.PHONY: dbmate.status
+dbmate.status:
+	@echo "Checking dbmate migration status..."
+	@cd server && APP_ENV=dev dbmate status
+
+# ========================================
 # Docker Targets
 # ========================================
 

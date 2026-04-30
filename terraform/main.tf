@@ -377,7 +377,7 @@ module "cicd" {
   github_owner             = "hogecode"
   github_repo              = "ecs-sample"
   github_token             = var.github_token
-  github_branch_develop    = "develop"
+  github_branch_develop    = "main"
   github_branch_main       = "main"
 
   # ECS Configuration - NextJS Service
