@@ -75,7 +75,7 @@ module "secrets" {
   environment                  = var.environment
   
   # RDS Configuration
-  rds_endpoint                 = module.rds.rds_instance_endpoint
+  rds_endpoint                 = module.rds.rds_instance_address
   rds_database_name            = var.rds_database_name
   rds_port                     = 3306
   db_engine                    = var.rds_engine
