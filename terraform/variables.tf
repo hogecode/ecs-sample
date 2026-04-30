@@ -466,34 +466,34 @@ variable "enable_s3_validation_lambda" {
 }
 
 # ========================================
-# Bastion Fargate Configuration
+# Bastion EC2 Configuration
 # ========================================
 
-variable "bastion_image_uri" {
-  description = "ECR image URI for bastion container"
-  type        = string
-  default     = ""
+variable "enable_bastion" {
+  description = "Enable bastion EC2 instance"
+  type        = bool
+  default     = true
 }
 
-variable "bastion_container_cpu" {
-  description = "CPU units for bastion container (256, 512, 1024, 2048, 4096)"
-  type        = number
-  default     = 256
+variable "bastion_instance_type" {
+  description = "EC2 instance type for bastion (t3.micro, t3.small, t3.medium)"
+  type        = string
+  default     = "t3.micro"
   
   validation {
-    condition     = contains([256, 512, 1024, 2048, 4096], var.bastion_container_cpu)
-    error_message = "Bastion CPU must be one of: 256, 512, 1024, 2048, 4096"
+    condition     = contains(["t3.micro", "t3.small", "t3.medium", "t2.micro", "t2.small"], var.bastion_instance_type)
+    error_message = "Bastion instance type must be one of: t3.micro, t3.small, t3.medium, t2.micro, t2.small"
   }
 }
 
-variable "bastion_container_memory" {
-  description = "Memory (MB) for bastion container"
+variable "bastion_root_volume_size" {
+  description = "Root volume size in GB for bastion instance"
   type        = number
-  default     = 512
+  default     = 20
   
   validation {
-    condition     = var.bastion_container_memory >= 512 && var.bastion_container_memory <= 30720
-    error_message = "Bastion memory must be between 512 and 30720 MB"
+    condition     = var.bastion_root_volume_size >= 8 && var.bastion_root_volume_size <= 1000
+    error_message = "Bastion root volume size must be between 8 and 1000 GB"
   }
 }
 
@@ -504,7 +504,7 @@ variable "rds_master_password_secret_arn" {
 }
 
 variable "app_db_username" {
-  description = "Application database username for bastion configuration"
+  description = "Application database username"
   type        = string
   default     = ""
   sensitive   = true

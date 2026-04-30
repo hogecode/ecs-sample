@@ -233,10 +233,10 @@ module "ecs" {
 
 
 # ========================================
-# Phase 4: Bastion Fargate Configuration
+# Phase 4: Bastion EC2 Configuration
 # ========================================
-module "bastion_fargate" {
-  source = "./modules/compute/bastion-fargate"
+module "bastion_ec2" {
+  source = "./modules/compute/bastion-ec2"
 
   project_name              = var.project_name
   environment               = var.environment
@@ -244,16 +244,13 @@ module "bastion_fargate" {
   
   # Network Configuration
   vpc_id                    = module.vpc.vpc_id
-  private_subnet_ids        = module.vpc.private_app_subnets
+  private_subnet_ids        = module.vpc.private_api_subnets
   bastion_security_group_id = module.security_group.bastion_security_group_id
   
-  # ECS Configuration
-  ecs_cluster_name = try(module.ecs.this_cluster_name, module.ecs.cluster_name, "")
-  
-  # Bastion Container Configuration
-  bastion_image_uri = var.bastion_image_uri
-  container_cpu     = var.bastion_container_cpu
-  container_memory  = var.bastion_container_memory
+  # EC2 Configuration
+  enable_bastion        = var.enable_bastion
+  bastion_instance_type = var.bastion_instance_type
+  bastion_root_volume_size = var.bastion_root_volume_size
   
   # Logging Configuration
   logs_retention_days = local.logs_retention_days
@@ -273,7 +270,7 @@ module "bastion_fargate" {
   # Tags
   tags = local.common_tags
 
-  depends_on = [module.ecs, module.vpc, module.security_group]
+  depends_on = [module.vpc, module.security_group]
 }
 
 

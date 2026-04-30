@@ -166,6 +166,9 @@ module "vpc_endpoints_sg" {
 
   ingress_rules       = ["https-443-tcp"]
   ingress_cidr_blocks = [var.vpc_cidr]
+  
+  # Allow ingress from security groups (will be added via separate rules)
+  ingress_with_source_security_group_id = []
 
   egress_rules        = ["all-all"]
   egress_cidr_blocks  = ["0.0.0.0/0"]
@@ -300,4 +303,72 @@ resource "aws_security_group_rule" "vpc_endpoints_from_go_server" {
   source_security_group_id = module.go_server_sg.security_group_id
   security_group_id        = module.vpc_endpoints_sg.security_group_id
   description              = "HTTPS from Go Server ECS for VPC Endpoints"
+}
+
+# ========================================
+# Bastion Security Group Rules
+# ========================================
+
+# Go Server <- Bastion (for SSH tunnel or direct access)
+resource "aws_security_group_rule" "go_server_from_bastion" {
+  type                     = "ingress"
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  source_security_group_id = module.bastion_sg.security_group_id
+  security_group_id        = module.go_server_sg.security_group_id
+  description              = "HTTP from Bastion EC2"
+}
+
+# Next.js <- Bastion (for SSH tunnel or direct access)
+resource "aws_security_group_rule" "nextjs_from_bastion" {
+  type                     = "ingress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  source_security_group_id = module.bastion_sg.security_group_id
+  security_group_id        = module.nextjs_sg.security_group_id
+  description              = "HTTP from Bastion EC2"
+}
+
+# Bastion egress rules to allow HTTP/HTTPS to ECS tasks
+resource "aws_security_group_rule" "bastion_egress_to_go_server" {
+  type                     = "egress"
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  cidr_blocks              = ["0.0.0.0/0"]
+  security_group_id        = module.bastion_sg.security_group_id
+  description              = "HTTP to Go Server ECS from Bastion"
+}
+
+resource "aws_security_group_rule" "bastion_egress_to_nextjs" {
+  type                     = "egress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  cidr_blocks              = ["0.0.0.0/0"]
+  security_group_id        = module.bastion_sg.security_group_id
+  description              = "HTTP to Next.js ECS from Bastion"
+}
+
+resource "aws_security_group_rule" "bastion_egress_http" {
+  type              = "egress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = module.bastion_sg.security_group_id
+  description       = "HTTP egress from Bastion (for package updates)"
+}
+
+# VPC Endpoints <- Bastion (for SSM, Secrets Manager, CloudWatch Logs)
+resource "aws_security_group_rule" "vpc_endpoints_from_bastion" {
+  type                     = "ingress"
+  from_port                = 443
+  to_port                  = 443
+  protocol                 = "tcp"
+  source_security_group_id = module.bastion_sg.security_group_id
+  security_group_id        = module.vpc_endpoints_sg.security_group_id
+  description              = "HTTPS from Bastion EC2 for VPC Endpoints (SSM, ECR, Secrets Manager)"
 }

@@ -302,6 +302,7 @@ resource "aws_vpc_endpoint" "monitoring" {
   private_dns_enabled = true
 
   subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
 
   tags = {
     Name = "${var.project_name}-monitoring-endpoint-${var.environment}"
@@ -316,6 +317,7 @@ resource "aws_vpc_endpoint" "ssm" {
   private_dns_enabled = true
 
   subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
 
   tags = {
     Name = "${var.project_name}-ssm-endpoint-${var.environment}"
@@ -330,6 +332,7 @@ resource "aws_vpc_endpoint" "ssmmessages" {
   private_dns_enabled = true
 
   subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
 
   tags = {
     Name = "${var.project_name}-ssmmessages-endpoint-${var.environment}"
@@ -344,6 +347,7 @@ resource "aws_vpc_endpoint" "ec2messages" {
   private_dns_enabled = true
 
   subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
 
   tags = {
     Name = "${var.project_name}-ec2messages-endpoint-${var.environment}"
