@@ -162,6 +162,7 @@ resource "aws_vpc_endpoint" "secrets_manager" {
   private_dns_enabled = true
 
   subnet_ids = aws_subnet.private_api[*].id
+  security_group_ids = [var.vpc_endpoints_security_group_id != "" ? var.vpc_endpoints_security_group_id : aws_security_group.vpc_endpoints_default[0].id]
 
   tags = {
     Name = "${var.project_name}-secretsmanager-endpoint-${var.environment}"
