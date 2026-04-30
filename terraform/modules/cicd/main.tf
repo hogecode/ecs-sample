@@ -657,36 +657,6 @@ resource "aws_codepipeline" "pipeline" {
   # Deploy Stage 1 - Next.js Deployment
   # ========================================
   dynamic "stage" {
-    for_each = var.ecs_nextjs_cluster_name != "" && var.ecs_nextjs_service_name != "" ? [1] : []
-    content {
-      name = "DeployNextJS"
-
-      action {
-        name            = "DeployNextJSAction"
-        category        = "Deploy"
-        owner           = "AWS"
-        provider        = "CodeDeployToECS"
-        input_artifacts = ["build_output"]
-        version         = "1"
-        run_order       = 2
-
-        configuration = {
-          ApplicationName         = aws_codedeploy_app.app.name
-          DeploymentGroupName     = aws_codedeploy_deployment_group.nextjs_deployment_group[0].deployment_group_name
-          AppSpecTemplateArtifact = "build_output"
-          AppSpecTemplatePath     = "appspec-nextjs.yaml"
-
-          TaskDefinitionTemplateArtifact = "build_output"
-          TaskDefinitionTemplatePath     = "nextjs-taskdef.json"
-        }
-      }
-    }
-  }
-
-  # ========================================
-  # Deploy Stage 2 - Go Server Deployment
-  # ========================================
-  dynamic "stage" {
     for_each = var.ecs_go_cluster_name != "" && var.ecs_go_service_name != "" ? [1] : []
     content {
       name = "DeployGoServer"
@@ -708,6 +678,35 @@ resource "aws_codepipeline" "pipeline" {
 
           TaskDefinitionTemplateArtifact = "build_output"
           TaskDefinitionTemplatePath     = "go-server-taskdef.json"
+        }
+      }
+    }
+  }
+  # ========================================
+  # Deploy Stage 1 - Next.js Deployment
+  # ========================================
+  dynamic "stage" {
+    for_each = var.ecs_nextjs_cluster_name != "" && var.ecs_nextjs_service_name != "" ? [1] : []
+    content {
+      name = "DeployNextJS"
+
+      action {
+        name            = "DeployNextJSAction"
+        category        = "Deploy"
+        owner           = "AWS"
+        provider        = "CodeDeployToECS"
+        input_artifacts = ["build_output"]
+        version         = "1"
+        run_order       = 2
+
+        configuration = {
+          ApplicationName         = aws_codedeploy_app.app.name
+          DeploymentGroupName     = aws_codedeploy_deployment_group.nextjs_deployment_group[0].deployment_group_name
+          AppSpecTemplateArtifact = "build_output"
+          AppSpecTemplatePath     = "appspec-nextjs.yaml"
+
+          TaskDefinitionTemplateArtifact = "build_output"
+          TaskDefinitionTemplatePath     = "nextjs-taskdef.json"
         }
       }
     }

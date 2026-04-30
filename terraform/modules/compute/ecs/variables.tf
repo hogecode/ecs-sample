@@ -248,6 +248,16 @@ variable "go_server_target_group_arn" {
 }
 
 # ========================================
+# Secrets Manager Configuration
+# ========================================
+
+variable "db_credentials_secret_arn" {
+  description = "ARN of the database credentials secret from Secrets Manager"
+  type        = string
+  default     = ""
+}
+
+# ========================================
 # Internal Communication Configuration
 # ========================================
 

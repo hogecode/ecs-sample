@@ -236,6 +236,7 @@ resource "aws_ecs_task_definition" "nextjs" {
       name      = "${var.project_name}-nextjs"
       image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
       essential = true
+      enableExecuteCommand    = true
       portMappings = [
         {
           containerPort = var.nextjs_container_port
@@ -284,6 +285,7 @@ resource "aws_ecs_task_definition" "go_server" {
       name      = "${var.project_name}-go-server"
       image     = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
       essential = true
+      enableExecuteCommand    = true
       portMappings = [
         {
           containerPort = var.go_server_container_port
@@ -299,8 +301,16 @@ resource "aws_ecs_task_definition" "go_server" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-      environment = var.go_server_environment_variables
-      secrets     = var.go_server_secrets
+       environment = concat(
+         var.go_server_environment_variables,
+         var.db_credentials_secret_arn != "" ? [
+           {
+             name  = "DB_CREDENTIALS_SECRET_ARN"
+             value = var.db_credentials_secret_arn
+           }
+         ] : []
+       )
+       secrets     = var.go_server_secrets
     }
   ])
 
@@ -325,9 +335,11 @@ resource "local_file" "nextjs_taskdef_json" {
     memory                  = tostring(var.nextjs_task_memory)
     executionRoleArn        = aws_iam_role.ecs_task_execution_role.arn
     taskRoleArn             = aws_iam_role.ecs_task_role_nextjs.arn
+    
     containerDefinitions = [
       {
         name      = "${var.project_name}-nextjs"
+        enableExecuteCommand    = true
         image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
         essential = true
         portMappings = [
@@ -365,6 +377,7 @@ resource "local_file" "go_server_taskdef_json" {
   content = jsonencode({
     family                  = aws_ecs_task_definition.go_server.family
     networkMode             = "awsvpc"
+    enableExecuteCommand    = true
     requiresCompatibilities = ["FARGATE"]
     cpu                     = tostring(var.go_server_task_cpu)
     memory                  = tostring(var.go_server_task_memory)
@@ -390,6 +403,15 @@ resource "local_file" "go_server_taskdef_json" {
             "awslogs-stream-prefix" = "ecs"
           }
         }
+        environment = concat(
+          var.go_server_environment_variables,
+          var.db_credentials_secret_arn != "" ? [
+            {
+              name  = "DB_CREDENTIALS_SECRET_ARN"
+              value = var.db_credentials_secret_arn
+            }
+          ] : []
+        )
       }
     ]
   })
@@ -419,21 +441,19 @@ resource "aws_ecs_service" "nextjs" {
     container_port   = var.nextjs_container_port
   }
 
-  deployment_controller {
-    type = "CODE_DEPLOY"
-  }
-
-  # CODE_DEPLOY deployment controller では、Terraformがタスク定義やdesired_countを
-  # 直接更新できないため、CodeDeployで管理される変更は無視する
-  lifecycle {
-    ignore_changes = [task_definition, desired_count]
-  }
-
   depends_on = [
     aws_iam_role_policy.ecs_task_execution_custom,
     aws_iam_role_policy.ecs_task_role_nextjs
   ]
 
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
+  lifecycle {
+    ignore_changes = [task_definition, desired_count]
+  }
+  
   tags = {
     Name = "${var.project_name}-nextjs-service-${var.environment}"
   }
@@ -447,10 +467,6 @@ resource "aws_ecs_service" "go_server" {
   desired_count   = var.go_server_desired_count
   launch_type     = "FARGATE"
 
-  deployment_controller {
-    type = "CODE_DEPLOY"
-  }
-
   network_configuration {
     subnets          = var.private_api_subnet_ids
     security_groups  = [var.go_server_security_group_id]
@@ -463,8 +479,10 @@ resource "aws_ecs_service" "go_server" {
     container_port   = var.go_server_container_port
   }
 
-  # CODE_DEPLOY deployment controller では、Terraformがタスク定義やdesired_countを
-  # 直接更新できないため、CodeDeployで管理される変更は無視する
+  deployment_controller {
+    type = "CODE_DEPLOY"
+  }
+
   lifecycle {
     ignore_changes = [task_definition, desired_count]
   }
