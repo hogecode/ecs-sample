@@ -161,7 +161,7 @@ resource "aws_vpc_endpoint" "secrets_manager" {
   vpc_endpoint_type   = "Interface"
   private_dns_enabled = true
 
-  subnet_ids = slice(module.vpc.private_subnets, 0, length(var.availability_zones))
+  subnet_ids = aws_subnet.private_api[*].id
 
   tags = {
     Name = "${var.project_name}-secretsmanager-endpoint-${var.environment}"
