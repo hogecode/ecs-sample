@@ -29,8 +29,6 @@ ENVIRONMENTS := dev staging prod
 # Helper Functions
 # ========================================
 
-# Get environment emoji
-emoji = $(EMOJI_$(1))
 
 # AWS CLI with profile
 aws = aws --profile $(AWS_PROFILE)
