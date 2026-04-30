@@ -1,3 +1,6 @@
+// SSGを無効化して、常に最新のデータを取得するようにする
+export const dynamic = 'force-dynamic'
+
 import { getHomeData } from '@/lib/api/home';
 
 export default async function Home() {
