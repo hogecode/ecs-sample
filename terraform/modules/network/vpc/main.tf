@@ -267,7 +267,7 @@ resource "aws_vpc_endpoint" "ecr_dkr" {
 # Default Security Group for VPC Endpoints (if not provided)
 resource "aws_security_group" "vpc_endpoints_default" {
   count = var.vpc_endpoints_security_group_id == "" ? 1 : 0
-
+  
   name        = "${var.project_name}-vpc-endpoints-default-sg-${var.environment}"
   description = "Default Security group for VPC Endpoints"
   vpc_id      = module.vpc.vpc_id
