@@ -75,7 +75,7 @@ module "secrets" {
   environment                  = var.environment
   
   # RDS Configuration
-  rds_endpoint                 = ""  # Will be updated after RDS creation
+  rds_endpoint                 = module.rds.rds_instance_endpoint
   rds_database_name            = var.rds_database_name
   rds_port                     = 3306
   db_engine                    = var.rds_engine
@@ -93,7 +93,7 @@ module "secrets" {
   # Tags
   common_tags                  = local.common_tags
 
-  depends_on = [module.security_group, module.kms]
+  depends_on = [module.security_group, module.kms, module.rds]
 }
 
 
