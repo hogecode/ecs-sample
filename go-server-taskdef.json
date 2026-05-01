@@ -27,8 +27,7 @@
       "name": "ecs-sample-go-server",
       "portMappings": [
         { "containerPort": 8080, "hostPort": 8080, "protocol": "tcp" }
-      ],
-      "secrets": []
+      ]
     }
   ],
   "cpu": "256",

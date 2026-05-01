@@ -22,6 +22,7 @@ func main() {
 	if secretARN == "" {
 		log.Fatal("DB_CREDENTIALS_SECRET_ARN environment variable is not set")
 	}
+	log.Printf("Secret ARN raw: [%s]", secretARN)
 
 	// コンテキストを作成
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

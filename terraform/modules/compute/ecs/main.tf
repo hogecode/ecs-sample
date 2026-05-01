@@ -331,7 +331,7 @@ resource "aws_ecs_task_definition" "go_server" {
           }
         ] : []
       )
-      secrets = var.go_server_secrets
+      # secrets = var.go_server_secrets
     }
   ])
 
@@ -451,7 +451,7 @@ resource "local_file" "go_server_taskdef_json" {
             }
           ] : []
         )
-        secrets = var.go_server_secrets
+        # secrets = var.go_server_secrets
       }
     ]
   })
