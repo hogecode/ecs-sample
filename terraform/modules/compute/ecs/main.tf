@@ -323,17 +323,15 @@ resource "aws_ecs_task_definition" "go_server" {
             name  = "DB_ENGINE"
             value = var.rds_engine
           }
-        ] : []
-      )
-      secrets = concat(
-        var.go_server_secrets,
+        ] : [],
         var.rds_master_user_secret_arn != "" ? [
           {
-            name      = "DB_CREDENTIALS_SECRET_ARN"
-            valueFrom = var.rds_master_user_secret_arn
+            name  = "DB_CREDENTIALS_SECRET_ARN"
+            value = var.rds_master_user_secret_arn
           }
         ] : []
       )
+      secrets = var.go_server_secrets
     }
   ])
 
@@ -445,17 +443,15 @@ resource "local_file" "go_server_taskdef_json" {
               name  = "DB_ENGINE"
               value = var.rds_engine
             }
-          ] : []
-        )
-        secrets = concat(
-          var.go_server_secrets,
+          ] : [],
           var.rds_master_user_secret_arn != "" ? [
             {
-              name      = "DB_CREDENTIALS_SECRET_ARN"
-              valueFrom = var.rds_master_user_secret_arn
+              name  = "DB_CREDENTIALS_SECRET_ARN"
+              value = var.rds_master_user_secret_arn
             }
           ] : []
         )
+        secrets = var.go_server_secrets
       }
     ]
   })
