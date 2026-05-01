@@ -32,8 +32,14 @@ output "rds_master_password_id" {
   value       = aws_secretsmanager_secret.rds_master_password.id
 }
 
+output "rds_master_username" {
+  description = "RDS master username"
+  value       = "admin"
+  sensitive   = true
+}
+
 output "rds_master_password" {
-  description = "RDS master password (use with caution)"
+  description = "RDS master password"
   value       = random_password.rds_master_password.result
   sensitive   = true
 }

@@ -66,7 +66,7 @@ module "kms" {
 }
 
 # ========================================
-# Phase 2: Secrets Manager Configuration
+# Phase 2: Secrets Manager Configuration (for RDS Master Password)
 # ========================================
 module "secrets" {
   source = "./modules/secrets/secrets-manager"
@@ -74,8 +74,8 @@ module "secrets" {
   app_name                     = var.project_name
   environment                  = var.environment
   
-  # RDS Configuration
-  rds_endpoint                 = module.rds.rds_instance_address
+  # RDS Configuration - will be updated via local-exec after RDS creation
+  rds_endpoint                 = try(module.rds.rds_instance_endpoint, "")
   rds_database_name            = var.rds_database_name
   rds_port                     = 3306
   db_engine                    = var.rds_engine
@@ -93,7 +93,7 @@ module "secrets" {
   # Tags
   common_tags                  = local.common_tags
 
-  depends_on = [module.security_group, module.kms, module.rds]
+  depends_on = [module.security_group, module.kms]
 }
 
 
@@ -307,8 +307,8 @@ module "rds" {
   rds_instance_class        = local.rds_instance_class
   rds_allocated_storage     = var.rds_allocated_storage
   rds_database_name         = var.rds_database_name
-  rds_username              = var.rds_username
-  rds_password              = var.rds_password
+  rds_username              = module.secrets.rds_master_username
+  rds_password              = module.secrets.rds_master_password
 
   # High Availability
   rds_multi_az              = local.rds_multi_az
@@ -316,11 +316,25 @@ module "rds" {
   rds_publicly_accessible   = var.rds_publicly_accessible
 
    # Monitoring & Parameters
-   rds_parameter_group_family = var.rds_parameter_group_family
-   rds_parameters            = var.rds_parameters
-   enable_enhanced_monitoring = var.enable_enhanced_monitoring
+  rds_parameter_group_family = var.rds_parameter_group_family
+  rds_parameters            = var.rds_parameters
+  enable_enhanced_monitoring = var.enable_enhanced_monitoring
 
+  # RDS depends only on infrastructure, not on secrets versions
   depends_on = [module.vpc, module.security_group]
+}
+
+# ========================================
+# Update Secrets after RDS creation
+# ========================================
+# This ensures RDS endpoint is available before updating secret versions
+# This breaks the circular dependency between RDS and Secrets
+resource "null_resource" "secrets_update_trigger" {
+  triggers = {
+    rds_endpoint = module.rds.rds_instance_endpoint
+  }
+  
+  depends_on = [module.rds, module.secrets]
 }
 
 

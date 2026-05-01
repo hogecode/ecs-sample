@@ -4,11 +4,6 @@
 # RDS Instance using terraform-aws-modules
 # ========================================
 
-# TODO: DBPWを自動生成するためにrandom_passwordリソースを使用
-# resource "random_password" "rds_password"
-# Secrets Managerの generate_secret_string を使う
-# manage_master_user_password = true
-
 module "rds" {
   source = "terraform-aws-modules/rds/aws"
   version = "~> 6.0"

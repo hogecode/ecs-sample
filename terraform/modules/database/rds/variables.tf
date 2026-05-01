@@ -74,14 +74,13 @@ variable "rds_database_name" {
 }
 
 variable "rds_username" {
-  description = "Master username"
+  description = "Master username (from Secrets Manager)"
   type        = string
-  default     = "admin"
   sensitive   = true
 }
 
 variable "rds_password" {
-  description = "Master password"
+  description = "Master password (from Secrets Manager)"
   type        = string
   sensitive   = true
 }

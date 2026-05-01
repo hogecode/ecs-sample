@@ -71,7 +71,7 @@ resource "aws_secretsmanager_secret_version" "app_db_credentials" {
   secret_id = aws_secretsmanager_secret.app_db_credentials.id
   secret_string = jsonencode({
     username = var.app_db_username
-    password = random_password.app_db_password.result
+    password = random_password.rds_master_password.result
     host     = var.rds_endpoint
     database = var.rds_database_name
     port     = var.rds_port
