@@ -233,10 +233,10 @@ resource "aws_ecs_task_definition" "nextjs" {
 
   container_definitions = jsonencode([
     {
-      name      = "${var.project_name}-nextjs"
-      image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
-      essential = true
-      enableExecuteCommand    = true
+      name                 = "${var.project_name}-nextjs"
+      image                = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
+      essential            = true
+      enableExecuteCommand = true
       portMappings = [
         {
           containerPort = var.nextjs_container_port
@@ -282,10 +282,10 @@ resource "aws_ecs_task_definition" "go_server" {
 
   container_definitions = jsonencode([
     {
-      name      = "${var.project_name}-go-server"
-      image     = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
-      essential = true
-      enableExecuteCommand    = true
+      name                 = "${var.project_name}-go-server"
+      image                = "${var.ecr_go_server_repository_url}:${var.go_server_image_tag}"
+      essential            = true
+      enableExecuteCommand = true
       portMappings = [
         {
           containerPort = var.go_server_container_port
@@ -355,13 +355,13 @@ resource "local_file" "nextjs_taskdef_json" {
     memory                  = tostring(var.nextjs_task_memory)
     executionRoleArn        = aws_iam_role.ecs_task_execution_role.arn
     taskRoleArn             = aws_iam_role.ecs_task_role_nextjs.arn
-    
+
     containerDefinitions = [
       {
-        name      = "${var.project_name}-nextjs"
-        enableExecuteCommand    = true
-        image     = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
-        essential = true
+        name                 = "${var.project_name}-nextjs"
+        enableExecuteCommand = true
+        image                = "${var.ecr_nextjs_repository_url}:${var.nextjs_image_tag}"
+        essential            = true
         portMappings = [
           {
             containerPort = var.nextjs_container_port
@@ -423,7 +423,36 @@ resource "local_file" "go_server_taskdef_json" {
             "awslogs-stream-prefix" = "ecs"
           }
         }
-        environment = var.go_server_environment_variables
+        environment = concat(
+          var.go_server_environment_variables,
+          [
+            {
+              name  = "DB_HOST"
+              value = var.rds_endpoint
+            },
+            {
+              name  = "DB_PORT"
+              value = tostring(var.rds_port)
+            },
+            {
+              name  = "DB_NAME"
+              value = var.rds_database_name
+            },
+            {
+              name  = "DB_ENGINE"
+              value = var.rds_engine
+            }
+          ]
+        )
+        secrets = concat(
+          var.go_server_secrets,
+          var.rds_master_user_secret_arn != "" ? [
+            {
+              name      = "DB_CREDENTIALS_SECRET_ARN"
+              valueFrom = var.rds_master_user_secret_arn
+            }
+          ] : []
+        )
       }
     ]
   })
@@ -465,7 +494,7 @@ resource "aws_ecs_service" "nextjs" {
   lifecycle {
     ignore_changes = [task_definition, desired_count]
   }
-  
+
   tags = {
     Name = "${var.project_name}-nextjs-service-${var.environment}"
   }
