@@ -104,7 +104,10 @@ resource "aws_iam_role_policy" "ecs_task_execution_custom" {
       {
         Effect   = "Allow"
         Action   = ["secretsmanager:GetSecretValue"]
-        Resource = "arn:aws:secretsmanager:${var.aws_region}:*:secret:${var.project_name}/*"
+        Resource = [
+          "arn:aws:secretsmanager:${var.aws_region}:*:secret:${var.project_name}/*",
+          "arn:aws:secretsmanager:${var.aws_region}:*:secret:rds!*"
+        ]
       },
       {
         Effect   = "Allow"
@@ -425,7 +428,7 @@ resource "local_file" "go_server_taskdef_json" {
         }
         environment = concat(
           var.go_server_environment_variables,
-          [
+          var.rds_endpoint != "" ? [
             {
               name  = "DB_HOST"
               value = var.rds_endpoint
@@ -442,7 +445,7 @@ resource "local_file" "go_server_taskdef_json" {
               name  = "DB_ENGINE"
               value = var.rds_engine
             }
-          ]
+          ] : []
         )
         secrets = concat(
           var.go_server_secrets,
