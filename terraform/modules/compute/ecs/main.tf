@@ -204,7 +204,10 @@ resource "aws_iam_role_policy" "ecs_task_role_go_server" {
       {
         Effect   = "Allow"
         Action   = ["secretsmanager:GetSecretValue"]
-        Resource = "arn:aws:secretsmanager:${var.aws_region}:*:secret:${var.project_name}/*"
+        Resource = [
+          "arn:aws:secretsmanager:${var.aws_region}:*:secret:${var.project_name}/*",
+          "arn:aws:secretsmanager:${var.aws_region}:*:secret:rds!*"
+        ]
       },
       {
         Effect   = "Allow"
