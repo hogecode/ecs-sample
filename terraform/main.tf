@@ -65,37 +65,6 @@ module "kms" {
   depends_on = [module.security_group]
 }
 
-# ========================================
-# Phase 2: Secrets Manager Configuration (for RDS Master Password)
-# ========================================
-module "secrets" {
-  source = "./modules/secrets/secrets-manager"
-
-  app_name                     = var.project_name
-  environment                  = var.environment
-  
-  # RDS Configuration - will be updated via local-exec after RDS creation
-  rds_endpoint                 = try(module.rds.rds_instance_endpoint, "")
-  rds_database_name            = var.rds_database_name
-  rds_port                     = 3306
-  db_engine                    = var.rds_engine
-  
-  # Database User Credentials
-  app_db_username              = var.app_db_username != "" ? var.app_db_username : "appuser"
-  db_read_only_username        = "readonly"
-  
-  # Optional: App Key (if needed)
-  app_key                      = ""
-  
-  # KMS Encryption
-  secrets_kms_key_id           = module.kms.secrets_manager_key_id
-  
-  # Tags
-  common_tags                  = local.common_tags
-
-  depends_on = [module.security_group, module.kms]
-}
-
 
 # ========================================
 # Phase 3: SSL/TLS Certificates (ACM)
@@ -161,6 +130,54 @@ module "ecr" {
 
 
 # ========================================
+# Phase 5: Storage (S3)
+# ========================================
+module "storage" {
+  source = "./modules/storage/s3"
+
+  app_name                   = var.project_name
+  environment                = var.environment
+  domain_name                = var.domain_name
+  aws_region                 = var.aws_region
+  s3_filesystem_kms_key_arn  = module.security_group.s3_filesystem_kms_key_arn
+  caller_identity_account_id = data.aws_caller_identity.current.account_id
+  common_tags                = local.common_tags
+}
+
+
+# ========================================
+# Phase 6: RDS Database Configuration
+# ========================================
+module "rds" {
+  source = "./modules/database/rds"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  private_db_subnet_ids     = module.vpc.private_db_subnets
+  rds_security_group_id     = module.security_group.rds_security_group_id
+
+  # RDS Engine Configuration
+  rds_engine                = var.rds_engine
+  rds_engine_version        = var.rds_engine_version
+  rds_instance_class        = local.rds_instance_class
+  rds_allocated_storage     = var.rds_allocated_storage
+  rds_database_name         = var.rds_database_name
+
+  # High Availability
+  rds_multi_az              = local.rds_multi_az
+  rds_backup_retention_days = local.rds_backup_retention_days
+  rds_publicly_accessible   = var.rds_publicly_accessible
+
+   # Monitoring & Parameters
+  rds_parameter_group_family = var.rds_parameter_group_family
+  rds_parameters            = var.rds_parameters
+  enable_enhanced_monitoring = var.enable_enhanced_monitoring
+
+  # RDS depends only on infrastructure, not on secrets versions
+  depends_on = [module.vpc, module.security_group]
+}
+
+# ========================================
 # Phase 4: ECS Configuration
 # ========================================
 
@@ -222,15 +239,20 @@ module "ecs" {
   # Internal Communication Configuration
   private_alb_dns_name = module.alb.private_alb_dns_name
 
-   # NextJS Environment Variables (with dynamic ALB DNS reference)
-   nextjs_environment_variables = local.nextjs_environment_variables_merged
+  # RDS Database Configuration
+  rds_endpoint        = module.rds.db_instance_address
+  rds_port            = module.rds.db_instance_port
+  rds_database_name   = module.rds.db_instance_name
+  rds_engine          = var.rds_engine
 
-   # Secrets Manager Configuration
-   db_credentials_secret_arn = module.secrets.app_db_credentials_arn
+  # NextJS Environment Variables (with dynamic ALB DNS reference)
+  nextjs_environment_variables = local.nextjs_environment_variables_merged
 
-   depends_on = [module.vpc, module.security_group, module.alb, module.ecr, module.secrets]
+  # Secrets Manager Configuration
+  rds_master_user_secret_arn = module.rds.db_instance_master_user_secret_arn
+
+  depends_on = [module.vpc, module.security_group, module.alb, module.ecr, module.rds]
 }
-
 
 # ========================================
 # Phase 4: Bastion EC2 Configuration
@@ -271,70 +293,6 @@ module "bastion_ec2" {
   tags = local.common_tags
 
   depends_on = [module.vpc, module.security_group]
-}
-
-
-# ========================================
-# Phase 5: Storage (S3)
-# ========================================
-module "storage" {
-  source = "./modules/storage/s3"
-
-  app_name                   = var.project_name
-  environment                = var.environment
-  domain_name                = var.domain_name
-  aws_region                 = var.aws_region
-  s3_filesystem_kms_key_arn  = module.security_group.s3_filesystem_kms_key_arn
-  caller_identity_account_id = data.aws_caller_identity.current.account_id
-  common_tags                = local.common_tags
-}
-
-
-# ========================================
-# Phase 6: RDS Database Configuration
-# ========================================
-module "rds" {
-  source = "./modules/database/rds"
-
-  project_name              = var.project_name
-  environment               = var.environment
-  private_db_subnet_ids     = module.vpc.private_db_subnets
-  rds_security_group_id     = module.security_group.rds_security_group_id
-
-  # RDS Engine Configuration
-  rds_engine                = var.rds_engine
-  rds_engine_version        = var.rds_engine_version
-  rds_instance_class        = local.rds_instance_class
-  rds_allocated_storage     = var.rds_allocated_storage
-  rds_database_name         = var.rds_database_name
-  rds_username              = module.secrets.rds_master_username
-  rds_password              = module.secrets.rds_master_password
-
-  # High Availability
-  rds_multi_az              = local.rds_multi_az
-  rds_backup_retention_days = local.rds_backup_retention_days
-  rds_publicly_accessible   = var.rds_publicly_accessible
-
-   # Monitoring & Parameters
-  rds_parameter_group_family = var.rds_parameter_group_family
-  rds_parameters            = var.rds_parameters
-  enable_enhanced_monitoring = var.enable_enhanced_monitoring
-
-  # RDS depends only on infrastructure, not on secrets versions
-  depends_on = [module.vpc, module.security_group]
-}
-
-# ========================================
-# Update Secrets after RDS creation
-# ========================================
-# This ensures RDS endpoint is available before updating secret versions
-# This breaks the circular dependency between RDS and Secrets
-resource "null_resource" "secrets_update_trigger" {
-  triggers = {
-    rds_endpoint = module.rds.rds_instance_endpoint
-  }
-  
-  depends_on = [module.rds, module.secrets]
 }
 
 

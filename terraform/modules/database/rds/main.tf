@@ -25,8 +25,11 @@ module "rds" {
 
   # Database configuration
   db_name  = var.rds_database_name
-  username = var.rds_username
-  password = var.rds_password
+  
+  # Master user configuration
+  # manage_master_user_password = true の場合、username を指定し、password は AWS が自動生成・管理する
+  username = "admin"
+  manage_master_user_password = true
 
   # Network configuration
   db_subnet_group_name            = aws_db_subnet_group.main.name

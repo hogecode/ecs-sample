@@ -301,16 +301,36 @@ resource "aws_ecs_task_definition" "go_server" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
-       environment = concat(
-         var.go_server_environment_variables,
-         var.db_credentials_secret_arn != "" ? [
-           {
-             name  = "DB_CREDENTIALS_SECRET_ARN"
-             value = var.db_credentials_secret_arn
-           }
-         ] : []
-       )
-       secrets     = var.go_server_secrets
+      environment = concat(
+        var.go_server_environment_variables,
+        var.rds_endpoint != "" ? [
+          {
+            name  = "DB_HOST"
+            value = var.rds_endpoint
+          },
+          {
+            name  = "DB_PORT"
+            value = tostring(var.rds_port)
+          },
+          {
+            name  = "DB_NAME"
+            value = var.rds_database_name
+          },
+          {
+            name  = "DB_ENGINE"
+            value = var.rds_engine
+          }
+        ] : []
+      )
+      secrets = concat(
+        var.go_server_secrets,
+        var.rds_master_user_secret_arn != "" ? [
+          {
+            name      = "DB_CREDENTIALS_SECRET_ARN"
+            valueFrom = var.rds_master_user_secret_arn
+          }
+        ] : []
+      )
     }
   ])
 
@@ -403,15 +423,7 @@ resource "local_file" "go_server_taskdef_json" {
             "awslogs-stream-prefix" = "ecs"
           }
         }
-        environment = concat(
-          var.go_server_environment_variables,
-          var.db_credentials_secret_arn != "" ? [
-            {
-              name  = "DB_CREDENTIALS_SECRET_ARN"
-              value = var.db_credentials_secret_arn
-            }
-          ] : []
-        )
+        environment = var.go_server_environment_variables
       }
     ]
   })

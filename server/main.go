@@ -28,7 +28,7 @@ func main() {
 	defer cancel()
 
 	// Secrets Manager からDB接続情報を取得して接続を確立
-	database, err := db.GetDBFromSecrets(ctx, secretARN)
+	database, err := db.GetDBFromEnv(ctx, secretARN)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

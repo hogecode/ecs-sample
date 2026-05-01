@@ -74,14 +74,16 @@ variable "rds_database_name" {
 }
 
 variable "rds_username" {
-  description = "Master username (from Secrets Manager)"
+  description = "Master username (AWS auto-managed when using manage_master_user_password=true)"
   type        = string
+  default     = ""
   sensitive   = true
 }
 
 variable "rds_password" {
-  description = "Master password (from Secrets Manager)"
+  description = "Master password (AWS auto-managed when using manage_master_user_password=true)"
   type        = string
+  default     = ""
   sensitive   = true
 }
 
