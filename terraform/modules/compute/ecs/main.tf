@@ -426,7 +426,7 @@ resource "local_file" "go_server_taskdef_json" {
         }
         environment = concat(
           var.go_server_environment_variables,
-          var.rds_endpoint != "" ? [
+           [
             {
               name  = "DB_HOST"
               value = var.rds_endpoint
@@ -443,7 +443,7 @@ resource "local_file" "go_server_taskdef_json" {
               name  = "DB_ENGINE"
               value = var.rds_engine
             }
-          ] : [],
+          ],
           var.rds_master_user_secret_arn != "" ? [
             {
               name  = "DB_CREDENTIALS_SECRET_ARN"
