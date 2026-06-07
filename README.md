@@ -1,7 +1,6 @@
 # Terraform IaC - AWS ECS Architecture
 
 このプロジェクトは、AWS ECS Fargate 上で動作するマイクロサービスアーキテクチャを IaC (Infrastructure as Code) で実装しています。Next.js フロントエンドと Go バックエンドサーバーをコンテナ化し、本番環境の高可用性と開発環境のコスト効率を両立させています。
-developブランチで作業しており、mainブランチは100コミット程度遅れています。
 
 ## 📁 ディレクトリ構造
 

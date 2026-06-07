@@ -171,22 +171,22 @@ output "go_server_log_group_name" {
 
 output "rds_instance_endpoint" {
   description = "RDS Instance endpoint (hostname:port)"
-  value       = module.rds.rds_instance_endpoint
+  value       = module.rds.db_instance_endpoint
 }
 
 output "rds_instance_address" {
   description = "RDS Instance hostname"
-  value       = module.rds.rds_instance_address
+  value       = module.rds.db_instance_address
 }
 
 output "rds_instance_port" {
   description = "RDS Instance port"
-  value       = module.rds.rds_instance_port
+  value       = module.rds.db_instance_port
 }
 
 output "rds_instance_name" {
   description = "RDS Instance database name"
-  value       = module.rds.rds_instance_name
+  value       = module.rds.db_instance_name
 }
 
 

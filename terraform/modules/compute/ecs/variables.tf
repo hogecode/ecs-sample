@@ -248,11 +248,39 @@ variable "go_server_target_group_arn" {
 }
 
 # ========================================
+# Database Configuration
+# ========================================
+
+variable "rds_endpoint" {
+  description = "RDS instance endpoint (hostname)"
+  type        = string
+  default     = ""
+}
+
+variable "rds_port" {
+  description = "RDS instance port"
+  type        = number
+  default     = 3306
+}
+
+variable "rds_database_name" {
+  description = "RDS database name"
+  type        = string
+  default     = ""
+}
+
+variable "rds_engine" {
+  description = "RDS database engine (mysql or postgres)"
+  type        = string
+  default     = "mysql"
+}
+
+# ========================================
 # Secrets Manager Configuration
 # ========================================
 
-variable "db_credentials_secret_arn" {
-  description = "ARN of the database credentials secret from Secrets Manager"
+variable "rds_master_user_secret_arn" {
+  description = "ARN of the RDS master user secret (managed by AWS Secrets Manager)"
   type        = string
   default     = ""
 }
